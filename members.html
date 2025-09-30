@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Member Portal - Emmanuel Royal Singing Band</title>
+    <meta name="description" content="Member login and registration for Emmanuel Royal Singing Band">
+    <link rel="icon" type="image/x-icon" href="images/favicon.ico/favicon.ico">
+    <link rel="stylesheet" href="style.css">
+    <!-- Enhanced Security Headers as Meta Tags -->
+    <!-- Enhanced Security Headers as Meta Tags -->
+    <meta http-equiv="Content-Security-Policy" 
+    content="default-src 'self';
+            script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://wfsryzanwgkvfrnaovac.supabase.co;
+            style-src 'self' 'unsafe-inline';
+            img-src 'self' data: https:;
+            font-src 'self';
+            connect-src 'self' https://wfsryzanwgkvfrnaovac.supabase.co https://chat.whatsapp.com;
+            frame-src 'self' https://calendar.google.com https://*.google.com;
+            base-uri 'self';
+            form-action 'self';">
+
+    <meta http-equiv="X-Frame-Options" content="DENY">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <img src="images/1000095305.jpg" alt="Emmanuel Royal Singing Band Logo" class="nav-logo round-logo">
+                <a href="index.html" class="nav-logo-text">Emmanuel Royal Singing Band</a>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="index.html" class="nav-link">Home</a></li>
+                <li><a href="history.html" class="nav-link">Our History</a></li>
+                <li><a href="members.html" class="nav-link">Members</a></li>
+                <li><a href="leadership.html" class="nav-link">Leadership</a></li>
+                <li><a href="music.html" class="nav-link">Music</a></li>
+                <li><a href="events.html" class="nav-link">Events</a></li>
+                <li><a href="https://chat.whatsapp.com/HutYGDndxcvDaNr8PvArWm" class="nav-link whatsapp-link" target="_blank">WhatsApp Group</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <section class="members">
+        <div class="container">
+            <h2>Band Members Portal</h2>
+            
+            <!-- Login Form -->
+            <div id="loginSection" class="auth-section">
+                <div class="auth-form">
+                    <h3>Member Login</h3>
+                    <form id="loginForm">
+                        <div class="form-group">
+                            <input type="email" id="loginEmail" placeholder="Email Address" required>
+                        </div>
+                        <div class="form-group">
+                            <input type="password" id="loginPassword" placeholder="Password" required>
+                        </div>
+                        <button type="submit" class="hero-btn">Login</button>
+                    </form>
+                    <p>Not a member? <a href="#" id="showRegister">Register here</a></p>
+                </div>
+            </div>
+
+            <!-- Registration Form -->
+            <div id="registerSection" class="auth-section" style="display: none;">
+                <div class="auth-form">
+                    <h3>Join Our Band</h3>
+                    <form id="registerForm">
+                        <div class="form-group">
+                            <input type="text" id="regName" placeholder="Full Name" required>
+                        </div>
+                        <div class="form-group">
+                            <input type="email" id="regEmail" placeholder="Email Address" required>
+                        </div>
+                        <div class="form-group">
+                            <input type="tel" id="regPhone" placeholder="Phone Number" required>
+                        </div>
+                        <div class="form-group">
+                            <select id="regVoice" required>
+                                <option value="">Voice Part</option>
+                                <option value="soprano">Soprano</option>
+                                <option value="alto">Alto</option>
+                                <option value="tenor">Tenor</option>
+                                <option value="bass">Bass</option>
+                                <option value="instrumentalist">Instrumentalist</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <input type="password" id="regPassword" placeholder="Password (min. 6 characters)" required>
+                        </div>
+                        <button type="submit" class="hero-btn">Create Account</button>
+                    </form>
+                    <p>Already a member? <a href="#" id="showLogin">Login here</a></p>
+                </div>
+            </div>
+
+            <!-- Member Profile -->
+            <div id="profileSection" class="auth-section" style="display: none;">
+                <div class="profile-header">
+                    <h3>Welcome, <span id="userName"></span>!</h3>
+                    <button id="logoutBtn" class="logout-btn">Logout</button>
+                </div>
+                
+                <div class="profile-content">
+                    <div class="profile-picture">
+                        <img id="profileImg" src="images/514-5147412_default-avatar-png.png" alt="Profile Picture">
+                        <input type="file" id="profileUpload" accept="image/*" style="display: none;">
+                        <button onclick="document.getElementById('profileUpload').click()" class="hero-btn">Change Photo</button>
+                    </div>
+                    
+                    <div class="profile-info">
+                        <h4>Your Profile</h4>
+                        <p><strong>Email:</strong> <span id="userEmail"></span></p>
+                        <p><strong>Phone:</strong> <span id="userPhone"></span></p>
+                        <p><strong>Voice Part:</strong> <span id="userVoice"></span></p>
+                        <button id="editProfileBtn" class="hero-btn">Edit Profile</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Members Display Section -->
+            <div id="membersDisplay" class="members-display">
+                <h3>Our Band Members</h3>
+                <div id="membersGrid" class="members-grid">
+                    <!-- Members will be loaded here automatically -->
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <p>&copy; <span id="year"></span> Emmanuel Royal Singing Band. All Rights Reserved.</p>
+        <p>Methodist Church Ghana Aboaboso</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config-enhanced.js"></script>
+    <script src="security-utils.js"></script>
+    <script src="members-auth.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

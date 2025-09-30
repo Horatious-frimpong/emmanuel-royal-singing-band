@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Member Dashboard - Emmanuel Royal Singing Band</title>
+    <meta name="description" content="Member dashboard for Emmanuel Royal Singing Band">
+    <link rel="icon" type="image/x-icon" href="images/favicon.ico/favicon.ico">
+    <link rel="stylesheet" href="style.css">
+    <!-- Enhanced Security Headers as Meta Tags -->
+    <meta http-equiv="Content-Security-Policy" 
+    content="default-src 'self';
+            script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://wfsryzanwgkvfrnaovac.supabase.co;
+            style-src 'self' 'unsafe-inline';
+            img-src 'self' data: https:;
+            font-src 'self';
+            connect-src 'self' https://wfsryzanwgkvfrnaovac.supabase.co https://chat.whatsapp.com;
+            frame-src 'self' https://calendar.google.com https://*.google.com;
+            base-uri 'self';
+            form-action 'self';">
+
+    <meta http-equiv="X-Frame-Options" content="DENY">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <img src="images/logo-small.png" alt="Emmanuel Royal Singing Band Logo" class="nav-logo round-logo">
+                <a href="index.html" class="nav-logo-text">Emmanuel Royal Singing Band</a>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="index.html" class="nav-link">Home</a></li>
+                <li><a href="history.html" class="nav-link">Our History</a></li>
+                <li><a href="member-dashboard.html" class="nav-link active">Dashboard</a></li>
+                <li><a href="members.html" class="nav-link">Members</a></li>
+                <li><a href="leadership.html" class="nav-link">Leadership</a></li>
+                <li><a href="music.html" class="nav-link">Music</a></li>
+                <li><a href="events.html" class="nav-link">Events</a></li>
+                <li><a href="https://chat.whatsapp.com/HutYGDndxcvDaNr8PvArWm" class="nav-link whatsapp-link" target="_blank">WhatsApp Group</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <section class="member-dashboard">
+        <div class="container">
+            <!-- Dashboard Header -->
+            <div class="dashboard-header">
+                <h1>Member Dashboard</h1>
+                <p>Welcome back, <span id="memberName">Member</span>! Here's what's happening with the band.</p>
+            </div>
+
+            <div class="dashboard-grid">
+                <!-- Left Column -->
+                <div class="dashboard-left">
+                    <!-- Upcoming Events -->
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <h3>📅 Upcoming Events</h3>
+                            <a href="events.html" class="view-all">View All</a>
+                        </div>
+                        <div id="upcomingEventsList" class="events-list">
+                            <!-- Events will be loaded here -->
+                            <div class="loading">Loading events...</div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Announcements -->
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <h3>📢 Recent Announcements</h3>
+                        </div>
+                        <div id="announcementsList" class="announcements-list">
+                            <!-- Announcements will be loaded here -->
+                            <div class="loading">Loading announcements...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column -->
+                <div class="dashboard-right">
+                    <!-- Quick Stats -->
+                    <div class="dashboard-card">
+                        <h3>📊 Band Overview</h3>
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <div class="stat-number" id="totalMembers">--</div>
+                                <div class="stat-label">Total Members</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-number" id="upcomingPractices">--</div>
+                                <div class="stat-label">This Week's Practices</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-number" id="newSongs">--</div>
+                                <div class="stat-label">New Songs This Month</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="dashboard-card">
+                        <h3>🚀 Quick Actions</h3>
+                        <div class="actions-grid">
+                            <a href="music.html" class="action-btn">
+                                <span class="action-icon">🎵</span>
+                                <span class="action-text">View Music Repertoire</span>
+                            </a>
+                            <a href="members.html" class="action-btn">
+                                <span class="action-icon">👥</span>
+                                <span class="action-text">Member Directory</span>
+                            </a>
+                            <a href="https://chat.whatsapp.com/HutYGDndxcvDaNr8PvArWm" class="action-btn" target="_blank">
+                                <span class="action-icon">💬</span>
+                                <span class="action-text">WhatsApp Group</span>
+                            </a>
+                            <button class="action-btn" id="suggestSongBtn">
+                                <span class="action-icon">💡</span>
+                                <span class="action-text">Suggest a Song</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Practice Schedule -->
+                    <div class="dashboard-card">
+                        <h3>🕐 Regular Schedule</h3>
+                        <div class="schedule-list">
+                            <div class="schedule-item">
+                                <span class="schedule-day">Sundays</span>
+                                <span class="schedule-event">Church Service</span>
+                                <span class="schedule-time">8:00 AM</span>
+                            </div>
+                            <div class="schedule-item">
+                                <span class="schedule-day">Thursdays</span>
+                                <span class="schedule-event">Band Practice</span>
+                                <span class="schedule-time">5:00 PM</span>
+                            </div>
+                            <div class="schedule-item">
+                                <span class="schedule-day">Saturdays</span>
+                                <span class="schedule-event">Band Practice</span>
+                                <span class="schedule-time">5:00 PM</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Suggestions Section -->
+            <div class="dashboard-card full-width">
+                <div class="card-header">
+                    <h3>💡 Suggestions & Feedback</h3>
+                    <p>Have ideas to improve our band? Share them here!</p>
+                </div>
+                <form id="suggestionForm" class="suggestion-form">
+                    <div class="form-group">
+                        <label for="suggestionType">Suggestion Type</label>
+                        <select id="suggestionType" required>
+                            <option value="">Select type...</option>
+                            <option value="song">Song Suggestion</option>
+                            <option value="event">Event Idea</option>
+                            <option value="improvement">Band Improvement</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="suggestionTitle">Title</label>
+                        <input type="text" id="suggestionTitle" placeholder="Brief title of your suggestion" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="suggestionDescription">Description</label>
+                        <textarea id="suggestionDescription" placeholder="Please describe your suggestion in detail..." rows="4" required></textarea>
+                    </div>
+                    <button type="submit" class="hero-btn">Submit Suggestion</button>
+                </form>
+
+                <!-- My Suggestions -->
+                <div class="my-suggestions">
+                    <h4>My Recent Suggestions</h4>
+                    <div id="mySuggestionsList">
+                        <p class="no-suggestions">You haven't submitted any suggestions yet.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Song Suggestion Modal -->
+    <div id="songSuggestionModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h3>🎵 Suggest a Song</h3>
+            <form id="songSuggestionForm">
+                <div class="form-group">
+                    <input type="text" id="songName" placeholder="Song Title" required>
+                </div>
+                <div class="form-group">
+                    <select id="songCategory" required>
+                        <option value="">Select Category</option>
+                        <option value="Methodist Anthems & Traditional Hymns">Methodist Anthems & Traditional Hymns</option>
+                        <option value="Ghanaian Highlife & Contemporary Worship">Ghanaian Highlife & Contemporary Worship</option>
+                        <option value="Choir Specials & Seasonal Songs">Choir Specials & Seasonal Songs</option>
+                        <option value="Local Compositions & Original Songs">Local Compositions & Original Songs</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <select id="songLanguage">
+                        <option value="English">English</option>
+                        <option value="Twi">Twi</option>
+                        <option value="Fante">Fante</option>
+                        <option value="Ewe">Ewe</option>
+                        <option value="Ga">Ga</option>
+                        <option value="Multilingual">Multilingual</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <textarea id="songReason" placeholder="Why do you think we should learn this song? (optional)" rows="3"></textarea>
+                </div>
+                <button type="submit" class="hero-btn">Submit Song Suggestion</button>
+            </form>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>&copy; <span id="year"></span> Emmanuel Royal Singing Band. All Rights Reserved.</p>
+        <p>Methodist Church Ghana Aboaboso</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config-enhanced.js"></script>
+    <script src="security-utils.js"></script>
+    <script src="member-dashboard.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Music Repertoire - Emmanuel Royal Singing Band</title>
+    <meta name="description" content="Our collection of songs and hymns">
+    <link rel="icon" type="image/x-icon" href="images/favicon.ico/favicon.ico">
+    <link rel="stylesheet" href="style.css">
+    <!-- Enhanced Security Headers as Meta Tags -->
+    <meta http-equiv="Content-Security-Policy" 
+    content="default-src 'self';
+            script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://wfsryzanwgkvfrnaovac.supabase.co;
+            style-src 'self' 'unsafe-inline';
+            img-src 'self' data: https:;
+            font-src 'self';
+            connect-src 'self' https://wfsryzanwgkvfrnaovac.supabase.co https://chat.whatsapp.com;
+            frame-src 'self' https://calendar.google.com https://*.google.com;
+            base-uri 'self';
+            form-action 'self';">
+
+    <meta http-equiv="X-Frame-Options" content="DENY">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <img src="images/1000095305.jpg" alt="Emmanuel Royal Singing Band Logo" class="nav-logo round-logo">
+                <a href="index.html" class="nav-logo-text">Emmanuel Royal Singing Band</a>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="index.html" class="nav-link">Home</a></li>
+                <li><a href="history.html" class="nav-link">Our History</a></li>
+                <li><a href="members.html" class="nav-link">Members</a></li>
+                <li><a href="leadership.html" class="nav-link">Leadership</a></li>
+                <li><a href="music.html" class="nav-link">Music</a></li>
+                <li><a href="events.html" class="nav-link">Events</a></li>
+                <li><a href="member-dashboard.html" class="nav-link">Dashboard</a></li>
+                <li><a href="https://chat.whatsapp.com/HutYGDndxcvDaNr8PvArWm" class="nav-link whatsapp-link" target="_blank">WhatsApp Group</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <section class="music">
+        <div class="container">
+            <h2>Our Musical Repertoire</h2>
+            <p class="section-intro">Explore our collection of worship songs and hymns. Our repertoire grows as we learn new music together in ministry.</p>
+            
+            <div id="musicRepertoire" class="repertoire-grid">
+                <!-- Content will be loaded by JavaScript -->
+            </div>
+
+            <div class="repertoire-note">
+                <p><strong>💫 Our Growing Collection:</strong> New songs are added regularly by our music leadership team. 
+                <strong>Have a song suggestion?</strong> Contact our Music Director!</p>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <p>&copy; <span id="year"></span> Emmanuel Royal Singing Band. All Rights Reserved.</p>
+        <p>Methodist Church Ghana Aboaboso</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config-enhanced.js"></script>
+    <script src="security-utils.js"></script>
+    <script src="music-manager.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
