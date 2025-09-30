@@ -96,6 +96,18 @@ body {
     text-align: center;
     padding: 0 1rem;
 }
+/* Hero Logo Styles - ADD THIS */
+.hero-logo {
+    width: 100px;  /* Smaller size */
+    height: 100px;
+    object-fit: cover; /* Changed from contain to cover for better round appearance */
+    margin-bottom: 1rem;
+    border-radius: 50%; /* This makes it round */
+    background: rgba(255, 255, 255, 0.1); /* Optional: subtle background */
+    padding: 0.5rem; /* Optional: spacing around logo */
+    border: 3px solid rgba(255, 255, 255, 0.3); /* Optional: border */
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); /* Optional: shadow */
+}
 
 .hero-content h1 {
     font-size: 2.2rem;
@@ -1643,4 +1655,5 @@ h2 {
         width: 80px;
         height: 80px;
     }
+
 }
