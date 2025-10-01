@@ -110,120 +110,164 @@ class MemberAuth {
         }
     }
 
-    async register() {
-        const name = document.getElementById('regName')?.value;
-        const email = document.getElementById('regEmail')?.value;
-        const phone = document.getElementById('regPhone')?.value;
-        const voice = document.getElementById('regVoice')?.value;
-        const password = document.getElementById('regPassword')?.value;
-        const profilePictureFile = document.getElementById('regProfilePicture')?.files[0];
-    
-        if (!name || !email || !phone || !voice || !password) {
-            alert('Please fill in all required fields');
-            return;
+async register() {
+    const name = document.getElementById('regName')?.value;
+    const email = document.getElementById('regEmail')?.value;
+    const phone = document.getElementById('regPhone')?.value;
+    const voice = document.getElementById('regVoice')?.value;
+    const password = document.getElementById('regPassword')?.value;
+    const profilePictureFile = document.getElementById('regProfilePicture')?.files[0];
+
+    if (!name || !email || !phone || !voice || !password) {
+        alert('Please fill in all required fields');
+        return;
+    }
+
+    if (!validatePassword(password)) {
+        alert('Password must be at least 6 characters');
+        return;
+    }
+
+    if (!SecurityUtils.validateEmail(email)) {
+        alert('Please enter a valid email address');
+        return;
+    }
+
+    const sanitizedName = SecurityUtils.sanitizeInput(name);
+    const sanitizedEmail = SecurityUtils.sanitizeInput(email);
+    const sanitizedPhone = SecurityUtils.sanitizeInput(phone);
+
+    try {
+        const { data: existingUsers, error: checkError } = await supabase
+            .from('members')
+            .select('email')
+            .eq('email', sanitizedEmail);
+
+        if (existingUsers && existingUsers.length > 0) {
+            throw new Error('Email already registered!');
         }
-    
-        if (!validatePassword(password)) {
-            alert('Password must be at least 6 characters');
-            return;
-        }
-    
-        if (!SecurityUtils.validateEmail(email)) {
-            alert('Please enter a valid email address');
-            return;
-        }
-    
-        const sanitizedName = SecurityUtils.sanitizeInput(name);
-        const sanitizedEmail = SecurityUtils.sanitizeInput(email);
-        const sanitizedPhone = SecurityUtils.sanitizeInput(phone);
-    
-        try {
-            const { data: existingUsers, error: checkError } = await supabase
-                .from('members')
-                .select('email')
-                .eq('email', sanitizedEmail);
-    
-            if (existingUsers && existingUsers.length > 0) {
-                throw new Error('Email already registered!');
+
+        // Step 1: Create auth user first
+        const { data: authData, error: authError } = await supabase.auth.signUp({
+            email: sanitizedEmail,
+            password: password,
+        });
+
+        if (authError) throw authError;
+
+        // Step 2: Wait 2 seconds for the user to be fully created in auth system
+        console.log('Waiting for user to be fully created...');
+        await new Promise(resolve => setTimeout(resolve, 2000));
+
+        let profilePictureUrl = 'images/514-5147412_default-avatar-png.png';
+
+        // Upload profile picture if provided
+        if (profilePictureFile) {
+            try {
+                profilePictureUrl = await this.uploadProfilePictureDuringRegistration(profilePictureFile, authData.user.id);
+            } catch (uploadError) {
+                console.error('Error uploading profile picture:', uploadError);
+                // Continue with default picture if upload fails
+                profilePictureUrl = 'images/514-5147412_default-avatar-png.png';
             }
-    
-            const { data: authData, error: authError } = await supabase.auth.signUp({
-                email: sanitizedEmail,
-                password: password,
-            });
-    
-            if (authError) throw authError;
-    
-            let profilePictureUrl = 'images/514-5147412_default-avatar-png.png'; // Default picture
-    
-            // Upload profile picture if provided
-            if (profilePictureFile) {
-                try {
-                    profilePictureUrl = await this.uploadProfilePictureDuringRegistration(profilePictureFile, authData.user.id);
-                } catch (uploadError) {
-                    console.error('Error uploading profile picture:', uploadError);
-                    // Continue with default picture if upload fails
-                    profilePictureUrl = 'images/514-5147412_default-avatar-png.png';
+        }
+
+        // Step 3: Insert member with profile picture (either uploaded or default)
+        const { error: dbError } = await supabase
+            .from('members')
+            .insert([
+                {
+                    user_id: authData.user.id,
+                    email: sanitizedEmail,
+                    name: sanitizedName,
+                    phone: sanitizedPhone,
+                    voice_part: voice,
+                    profile_picture: profilePictureUrl,
+                    created_at: new Date()
                 }
-            }
-    
-            // Insert member with profile picture (either uploaded or default)
-            const { error: dbError } = await supabase
-                .from('members')
+            ]);
+
+        // Auto-add super admin to leaders table if it's your email
+        if (sanitizedEmail === 'horatiousfrimpong@gmail.com') {
+            console.log('🎯 Super admin detected, auto-adding to leaders table...');
+            
+            const { error: leaderError } = await supabase
+                .from('leaders')
                 .insert([
                     {
                         user_id: authData.user.id,
                         email: sanitizedEmail,
-                        name: sanitizedName,
-                        phone: sanitizedPhone,
-                        voice_part: voice,
-                        profile_picture: profilePictureUrl,
-                        created_at: new Date()
+                        role: 'Super Admin',
+                        status: 'approved',
+                        added_by: 'system',
+                        is_active: true
                     }
                 ]);
-    
-            // Auto-add super admin to leaders table if it's your email
-            if (sanitizedEmail === 'horatiousfrimpong@gmail.com') {
-                console.log('🎯 Super admin detected, auto-adding to leaders table...');
-                
-                const { error: leaderError } = await supabase
-                    .from('leaders')
-                    .insert([
-                        {
-                            user_id: authData.user.id,
-                            email: sanitizedEmail,
-                            role: 'Super Admin',
-                            status: 'approved',
-                            added_by: 'system',
-                            is_active: true
-                        }
-                    ]);
-    
-                if (leaderError) {
-                    console.error('Error auto-adding super admin to leaders:', leaderError);
-                } else {
-                    console.log('✅ Super admin successfully added to leaders table!');
-                }
+
+            if (leaderError) {
+                console.error('Error auto-adding super admin to leaders:', leaderError);
+            } else {
+                console.log('✅ Super admin successfully added to leaders table!');
             }
-    
-            if (dbError) throw dbError;
-    
-            alert('Registration successful! You can now login.');
-            
-            // Auto-login after registration
-            const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
-                email: sanitizedEmail,
-                password: password
-            });
-    
-            if (loginError) throw loginError;
-            
-            window.location.href = 'member-dashboard.html';
-    
-        } catch (error) {
-            alert('Registration failed: ' + error.message);
         }
+
+        if (dbError) throw dbError;
+
+        alert('Registration successful! You can now login.');
+        
+        // Auto-login after registration
+        const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
+            email: sanitizedEmail,
+            password: password
+        });
+
+        if (loginError) throw loginError;
+        
+        window.location.href = 'member-dashboard.html';
+
+    } catch (error) {
+        alert('Registration failed: ' + error.message);
     }
+}
+
+// Make sure this upload function is also in your code:
+async uploadProfilePictureDuringRegistration(file, userId) {
+    const validTypes = {
+        'image/jpeg': true,
+        'image/jpg': true, 
+        'image/png': true,
+        'image/gif': true
+    };
+    
+    const maxSize = 2 * 1024 * 1024; // 2MB
+
+    if (!validTypes[file.type]) {
+        throw new Error('Please select a valid image file (JPEG, PNG, GIF only)');
+    }
+
+    if (file.size > maxSize) {
+        throw new Error('Image size must be less than 2MB');
+    }
+
+    const sanitizedFilename = SecurityUtils.sanitizeFilename(file.name);
+    
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${userId}-${Date.now()}.${fileExt}`;
+    
+    const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('profile-pictures')
+        .upload(fileName, file);
+
+    if (uploadError) throw uploadError;
+
+    const { data: urlData } = await supabase.storage
+        .from('profile-pictures')
+        .getPublicUrl(fileName);
+
+    if (!urlData.publicUrl) throw new Error('Could not get image URL');
+
+    return urlData.publicUrl;
+}
     
     // Add this new function to handle profile picture upload during registration
     async uploadProfilePictureDuringRegistration(file, userId) {
@@ -499,4 +543,5 @@ document.addEventListener('DOMContentLoaded', () => {
     new MemberAuth();
 
 });
+
 
