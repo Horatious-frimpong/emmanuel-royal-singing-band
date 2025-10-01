@@ -73,7 +73,18 @@ class MemberAuth {
         document.getElementById('editProfileBtn')?.addEventListener('click', () => {
             this.editProfile();
         });
+        // Add these to your existing setupEventListeners() function
+        document.getElementById('editProfileForm')?.addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.saveProfileChanges();
+        });
+        
+        document.getElementById('cancelEdit')?.addEventListener('click', () => {
+            this.showSection('profileSection');
+            this.loadUserProfile((await supabase.auth.getUser()).data.user.id);
+        });
     }
+    
 
     async login() {
         const email = document.getElementById('loginEmail')?.value;
@@ -510,11 +521,52 @@ class MemberAuth {
             alert('Error loading profile data: ' + error.message);
         }
     }
+    async saveProfileChanges() {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+    
+        const name = document.getElementById('editName').value;
+        const phone = document.getElementById('editPhone').value;
+        const voice = document.getElementById('editVoice').value;
+    
+        if (!name || !phone || !voice) {
+            alert('Please fill in all required fields');
+            return;
+        }
+    
+        const sanitizedName = SecurityUtils.sanitizeInput(name);
+        const sanitizedPhone = SecurityUtils.sanitizeInput(phone);
+    
+        try {
+            const { error } = await supabase
+                .from('members')
+                .update({
+                    name: sanitizedName,
+                    phone: sanitizedPhone,
+                    voice_part: voice,
+                    updated_at: new Date().toISOString()
+                })
+                .eq('user_id', user.id);
+    
+            if (error) throw error;
+    
+            // Show success message and return to profile view
+            alert('Profile updated successfully!');
+            this.showSection('profileSection');
+            this.loadUserProfile(user.id);
+            this.loadAllMembers(); // Refresh members display
+            
+        } catch (error) {
+            console.error('Error updating profile:', error);
+            alert('Error updating profile: ' + error.message);
+        }
+    }
 }
 
 // Initialize when page loads
 document.addEventListener('DOMContentLoaded', () => {
     new MemberAuth();
 });
+
 
 
