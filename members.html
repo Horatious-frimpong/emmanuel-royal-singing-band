@@ -125,6 +125,47 @@
                         <p><strong>Voice Part:</strong> <span id="userVoice"></span></p>
                         <button id="editProfileBtn" class="hero-btn">Edit Profile</button>
                     </div>
+                    <!-- Add this right after the profile-info div -->
+                    <!-- Edit Profile Form (Initially Hidden) -->
+                    <div id="editProfileSection" class="auth-section" style="display: none;">
+                        <div class="auth-form">
+                            <h3>Edit Your Profile</h3>
+                            <form id="editProfileForm">
+                                <div class="form-group">
+                                    <label for="editName">Full Name</label>
+                                    <input type="text" id="editName" required>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="editEmail">Email Address</label>
+                                    <input type="email" id="editEmail" required readonly style="background-color: #f5f5f5;">
+                                    <small style="color: #666;">Email cannot be changed</small>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="editPhone">Phone Number</label>
+                                    <input type="tel" id="editPhone" required>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="editVoice">Voice Part</label>
+                                    <select id="editVoice" required>
+                                        <option value="">Select Voice Part</option>
+                                        <option value="Soprano">Soprano</option>
+                                        <option value="Alto">Alto</option>
+                                        <option value="Tenor">Tenor</option>
+                                        <option value="Bass">Bass</option>
+                                        <option value="Instrumentalist">Instrumentalist</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="form-buttons">
+                                    <button type="submit" class="hero-btn">Save Changes</button>
+                                    <button type="button" id="cancelEdit" class="hero-btn secondary-btn">Cancel</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -151,4 +192,5 @@
 </body>
 
 </html>
+
 
