@@ -119,6 +119,11 @@ class MemberAuth {
         } catch (error) {
             alert('Login failed: ' + error.message);
         }
+        if (success) {
+            // ADD THIS ONE LINE:
+            AppNotifications.loginSuccess(user.name);
+            window.location.href = 'member-dashboard.html';
+        }
     }
 
     async register() {
@@ -594,6 +599,7 @@ class MemberAuth {
 document.addEventListener('DOMContentLoaded', () => {
     new MemberAuth();
 });
+
 
 
 
