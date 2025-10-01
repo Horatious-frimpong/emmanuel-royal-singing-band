@@ -473,7 +473,7 @@ class AdminDashboard {
                     status: 'approved',
                     added_by: (await supabase.auth.getUser()).data.user.email,
                     is_active: true,
-                    approved_at: new Date()
+                    approved_at: new Date().toISOString() 
                 }]);
 
             if (error) throw error;
@@ -494,7 +494,7 @@ class AdminDashboard {
                 .update({
                     status: 'approved',
                     is_active: true,
-                    approved_at: new Date()
+                    approved_at: new Date().toISOString() 
                 })
                 .eq('id', leaderId);
 
@@ -628,4 +628,5 @@ class AdminDashboard {
 
 // Initialize admin dashboard
 const adminDashboard = new AdminDashboard();
+
 
