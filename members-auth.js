@@ -229,47 +229,8 @@ class MemberAuth {
             alert('Registration failed: ' + error.message);
         }
     }
-
-// Make sure this upload function is also in your code:
-async uploadProfilePictureDuringRegistration(file, userId) {
-    const validTypes = {
-        'image/jpeg': true,
-        'image/jpg': true, 
-        'image/png': true,
-        'image/gif': true
-    };
     
-    const maxSize = 2 * 1024 * 1024; // 2MB
-
-    if (!validTypes[file.type]) {
-        throw new Error('Please select a valid image file (JPEG, PNG, GIF only)');
-    }
-
-    if (file.size > maxSize) {
-        throw new Error('Image size must be less than 2MB');
-    }
-
-    const sanitizedFilename = SecurityUtils.sanitizeFilename(file.name);
-    
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${userId}-${Date.now()}.${fileExt}`;
-    
-    const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('profile-pictures')
-        .upload(fileName, file);
-
-    if (uploadError) throw uploadError;
-
-    const { data: urlData } = await supabase.storage
-        .from('profile-pictures')
-        .getPublicUrl(fileName);
-
-    if (!urlData.publicUrl) throw new Error('Could not get image URL');
-
-    return urlData.publicUrl;
-}
-    
-    // Add this new function to handle profile picture upload during registration
+    // Make sure this upload function is also in your code:
     async uploadProfilePictureDuringRegistration(file, userId) {
         const validTypes = {
             'image/jpeg': true,
@@ -543,6 +504,7 @@ document.addEventListener('DOMContentLoaded', () => {
     new MemberAuth();
 
 });
+
 
 
 
