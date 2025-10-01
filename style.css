@@ -1665,30 +1665,20 @@ h2 {
     }
 
 }
-/* Mobile Navigation - Hamburger Menu */
-.nav-toggle {
-    display: none;
-    background: none;
-    border: none;
-    color: white;
-    font-size: 1.5rem;
-    cursor: pointer;
-    padding: 0.5rem;
-}
-
-/* Mobile Responsive Navbar */
+/* Mobile Responsive Navbar - FIXED */
 @media (max-width: 768px) {
     .navbar {
-        padding: 0.6rem 0; /* Even smaller on mobile */
+        padding: 0.6rem 0;
     }
     
     .nav-container {
         width: 95%;
-        flex-wrap: wrap; /* Allow wrapping */
+        flex-wrap: nowrap; /* Changed from wrap to nowrap */
     }
     
     .nav-brand {
         gap: 0.5rem;
+        flex: 1; /* Take available space */
     }
     
     .nav-logo {
@@ -1700,6 +1690,7 @@ h2 {
         font-size: 1rem;
     }
     
+    /* Hide regular menu on mobile */
     .nav-menu {
         display: none; /* Hide by default on mobile */
         flex-direction: column;
@@ -1710,10 +1701,12 @@ h2 {
         left: 0;
         padding: 1rem 0;
         box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        z-index: 1001;
     }
     
+    /* Show menu when active (hamburger clicked) */
     .nav-menu.active {
-        display: flex; /* Show when active */
+        display: flex;
     }
     
     .nav-link {
@@ -1721,23 +1714,31 @@ h2 {
         text-align: center;
         border-radius: 0;
         border-bottom: 1px solid rgba(255,255,255,0.1);
+        font-size: 0.9rem;
     }
     
     .nav-toggle {
-        display: block; /* Show hamburger on mobile */
+        display: block;
+        background: none;
+        border: none;
+        color: white;
+        font-size: 1.5rem;
+        cursor: pointer;
+        padding: 0.3rem;
+        margin-left: 1rem;
     }
     
-    /* Reduce padding on all sections to account for scrolling navbar */
+    /* Reduce padding on all sections */
     section {
-        padding: 40px 0; /* Reduced from 60px */
+        padding: 40px 0;
     }
     
     .members, .executives, .music, .events {
-        padding-top: 40px; /* Reduced from 80px */
+        padding-top: 40px;
     }
     
     .member-dashboard, .admin-dashboard, .history {
-        padding-top: 40px; /* Reduced from 80px/100px */
+        padding-top: 40px;
     }
 }
 
@@ -1755,9 +1756,9 @@ h2 {
         font-size: 0.9rem;
     }
     
-    .nav-link {
-        font-size: 0.8rem;
-        padding: 0.7rem 1rem;
+    .nav-toggle {
+        font-size: 1.3rem;
+        padding: 0.2rem;
     }
 }
 
