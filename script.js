@@ -1,3 +1,87 @@
+// Add this to your existing script.js file - AUTO UPDATES
+// Service Worker Registration with Auto Update
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    // Register service worker
+    navigator.serviceWorker.register('/sw.js')
+      .then(function(registration) {
+        console.log('✅ ServiceWorker registered: ', registration.scope);
+        
+        // Check for updates every hour
+        setInterval(() => {
+          registration.update();
+        }, 60 * 60 * 1000); // 1 hour
+        
+        // Listen for updates
+        registration.addEventListener('updatefound', () => {
+          console.log('🔄 New Service Worker found!');
+          const newWorker = registration.installing;
+          
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              // New content is available, show update notification
+              showServiceWorkerUpdateNotification();
+            }
+          });
+        });
+      })
+      .catch(function(error) {
+        console.log('❌ ServiceWorker registration failed: ', error);
+      });
+      
+    // Listen for controlled page updates
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      console.log('🎯 Controller changed - page will refresh');
+      window.location.reload();
+    });
+  });
+}
+
+// Show update notification
+function showServiceWorkerUpdateNotification() {
+  // Create a subtle notification that doesn't interrupt users
+  const notification = document.createElement('div');
+  notification.style.cssText = `
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: #8B0000;
+    color: white;
+    padding: 12px 16px;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    z-index: 10000;
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    cursor: pointer;
+    animation: slideIn 0.3s ease-out;
+  `;
+  
+  notification.innerHTML = `
+    <strong>🔄 Update Available</strong>
+    <div style="margin-top: 5px; font-size: 12px;">Click to refresh</div>
+  `;
+  
+  notification.onclick = () => {
+    window.location.reload();
+  };
+  
+  document.body.appendChild(notification);
+  
+  // Auto-remove after 10 seconds
+  setTimeout(() => {
+    if (notification.parentElement) {
+      notification.remove();
+    }
+  }, 10000);
+}
+
+// HTTPS enforcement (your existing code)
+if (window.location.protocol === 'http:' && window.location.hostname !== 'localhost' && !window.location.hostname.includes('127.0.0.1')) {
+  window.location.href = window.location.href.replace('http:', 'https:');
+}
+
+// ... rest of your existing script.js code ...
 // script.js - Global utilities for all pages
 
 // ✅ ADDED: HTTPS enforcement (3 lines at top)
@@ -183,3 +267,4 @@ document.addEventListener('DOMContentLoaded', async function() {
         }
     });
 });
+
