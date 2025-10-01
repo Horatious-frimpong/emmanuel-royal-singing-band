@@ -1852,3 +1852,158 @@ input[type="file"]::file-selector-button:hover {
     object-fit: cover;
     border: 3px solid #8B0000;
 }
+/* Enhanced profile picture styles - Mobile First Approach */
+.leader-profile-pic {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: opacity 0.3s ease;
+}
+
+.leader-profile-pic.loading {
+    opacity: 0.7;
+}
+
+.executive-img {
+    position: relative;
+    width: 100px;  /* Base size for desktop */
+    height: 100px; /* Base size for desktop */
+    margin: 0 auto 1rem;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 3px solid #8B0000;
+}
+
+.executive-img::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(139, 0, 0, 0.1);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+/* Dashboard profile picture */
+.dashboard-profile-img {
+    transition: transform 0.3s ease;
+    width: 80px;   /* Base size for desktop */
+    height: 80px;  /* Base size for desktop */
+    object-fit: cover;
+    border-radius: 50%;
+    border: 3px solid #8B0000;
+}
+
+.dashboard-profile-img:hover {
+    transform: scale(1.05);
+}
+
+/* Mobile Responsive Adjustments */
+@media (max-width: 768px) {
+    /* Smaller executive images on mobile */
+    .executive-img {
+        width: 80px;
+        height: 80px;
+        margin-bottom: 0.8rem;
+    }
+    
+    /* Smaller dashboard profile picture on mobile */
+    .dashboard-profile-img {
+        width: 60px;
+        height: 60px;
+    }
+    
+    /* Adjust dashboard profile layout for mobile */
+    .dashboard-profile {
+        flex-direction: column;
+        text-align: center;
+        gap: 0.8rem;
+    }
+    
+    /* Ensure executive cards look good on mobile */
+    .executive-card {
+        padding: 1rem;
+    }
+    
+    .executive-info h3 {
+        font-size: 1.1rem;
+    }
+    
+    .executive-info .position {
+        font-size: 0.9rem;
+    }
+    
+    .executive-info .responsibility {
+        font-size: 0.8rem;
+    }
+}
+
+@media (max-width: 480px) {
+    /* Even smaller on very small screens */
+    .executive-img {
+        width: 70px;
+        height: 70px;
+    }
+    
+    .dashboard-profile-img {
+        width: 50px;
+        height: 50px;
+    }
+    
+    /* Compact executive cards for very small screens */
+    .executive-card {
+        padding: 0.8rem;
+    }
+    
+    .executive-info h3 {
+        font-size: 1rem;
+    }
+}
+
+/* Touch-friendly interactions for mobile */
+@media (hover: none) {
+    .dashboard-profile-img:hover {
+        transform: none; /* Remove hover effects on touch devices */
+    }
+    
+    .leader-profile-pic {
+        cursor: default; /* Remove pointer cursor on touch devices */
+    }
+}
+
+/* Loading states for better mobile experience */
+.executive-img.loading {
+    background: #f0f0f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.executive-img.loading::before {
+    content: '📷';
+    font-size: 1.5rem;
+    opacity: 0.7;
+}
+
+/* High DPI screen support */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    .leader-profile-pic,
+    .dashboard-profile-img {
+        image-rendering: -webkit-optimize-contrast;
+        image-rendering: crisp-edges;
+    }
+}
+
+/* Reduced motion support for accessibility */
+@media (prefers-reduced-motion: reduce) {
+    .leader-profile-pic,
+    .dashboard-profile-img {
+        transition: none;
+    }
+    
+    .dashboard-profile-img:hover {
+        transform: none;
+    }
+}
