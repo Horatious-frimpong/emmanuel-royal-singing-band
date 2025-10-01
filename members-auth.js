@@ -147,7 +147,7 @@ class MemberAuth {
                 throw new Error('Email already registered!');
             }
     
-            // Step 1: Create auth user first
+            // Create auth user
             const { data: authData, error: authError } = await supabase.auth.signUp({
                 email: sanitizedEmail,
                 password: password,
@@ -155,49 +155,22 @@ class MemberAuth {
     
             if (authError) throw authError;
     
-            console.log('Auth user created, waiting for user to be ready...');
-    
-            // Step 2: Wait and verify user exists with retry logic
-            let currentUser = null;
-            let retries = 0;
-            const maxRetries = 5;
-    
-            while (retries < maxRetries && !currentUser) {
-                await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
-                const { data: { user } } = await supabase.auth.getUser();
-                
-                if (user && user.id) {
-                    currentUser = user;
-                    console.log('✅ User confirmed ready with ID:', user.id);
-                    break;
-                }
-                
-                retries++;
-                console.log(`Retry ${retries}/${maxRetries}: User not ready yet...`);
-            }
-    
-            if (!currentUser) {
-                throw new Error('User creation timed out. Please try again.');
-            }
-    
             let profilePictureUrl = 'images/514-5147412_default-avatar-png.png';
     
-            // Upload profile picture if provided
             if (profilePictureFile) {
                 try {
-                    profilePictureUrl = await this.uploadProfilePictureDuringRegistration(profilePictureFile, currentUser.id);
+                    profilePictureUrl = await this.uploadProfilePictureDuringRegistration(profilePictureFile, authData.user?.id || sanitizedEmail);
                 } catch (uploadError) {
                     console.error('Error uploading profile picture:', uploadError);
-                    profilePictureUrl = 'images/514-5147412_default-avatar-png.png';
                 }
             }
     
-            // Step 3: Insert member with the CONFIRMED user_id
+            // SIMPLE INSERT - no user_id foreign key issues
             const { error: dbError } = await supabase
                 .from('members')
                 .insert([
                     {
-                        user_id: currentUser.id, // Use the confirmed user ID
+                        user_id: authData.user?.id || sanitizedEmail, // Use email if no user_id
                         email: sanitizedEmail,
                         name: sanitizedName,
                         phone: sanitizedPhone,
@@ -208,19 +181,17 @@ class MemberAuth {
                 ]);
     
             if (dbError) {
-                console.error('Database error details:', dbError);
-                throw new Error('Failed to create member profile: ' + dbError.message);
+                console.error('Database error:', dbError);
+                throw new Error('Failed to create member: ' + dbError.message);
             }
     
-            // Auto-add super admin to leaders table if it's your email
+            // Auto-add super admin
             if (sanitizedEmail === 'horatiousfrimpong@gmail.com') {
-                console.log('🎯 Super admin detected, auto-adding to leaders table...');
-                
-                const { error: leaderError } = await supabase
+                await supabase
                     .from('leaders')
                     .insert([
                         {
-                            user_id: currentUser.id,
+                            user_id: authData.user?.id || sanitizedEmail,
                             email: sanitizedEmail,
                             role: 'Super Admin',
                             status: 'approved',
@@ -228,25 +199,13 @@ class MemberAuth {
                             is_active: true
                         }
                     ]);
-    
-                if (leaderError) {
-                    console.error('Error auto-adding super admin to leaders:', leaderError);
-                } else {
-                    console.log('✅ Super admin successfully added to leaders table!');
-                }
             }
     
-            alert('Registration successful! You can now login.');
+            alert('Registration successful! Please login with your credentials.');
             
-            // Auto-login after registration
-            const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
-                email: sanitizedEmail,
-                password: password
-            });
-    
-            if (loginError) throw loginError;
-            
-            window.location.href = 'member-dashboard.html';
+            // Show login section instead of auto-login
+            this.showSection('loginSection');
+            document.getElementById('registerForm').reset();
     
         } catch (error) {
             alert('Registration failed: ' + error.message);
@@ -487,6 +446,7 @@ document.addEventListener('DOMContentLoaded', () => {
     new MemberAuth();
 
 });
+
 
 
 
