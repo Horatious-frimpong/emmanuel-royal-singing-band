@@ -117,91 +117,132 @@ class MemberAuth {
         const voice = document.getElementById('regVoice')?.value;
         const password = document.getElementById('regPassword')?.value;
         const profilePictureFile = document.getElementById('regProfilePicture')?.files[0];
-
+    
         if (!name || !email || !phone || !voice || !password) {
             alert('Please fill in all required fields');
             return;
         }
-
+    
         if (!validatePassword(password)) {
             alert('Password must be at least 6 characters');
             return;
         }
-
+    
         if (!SecurityUtils.validateEmail(email)) {
             alert('Please enter a valid email address');
             return;
         }
-
+    
         const sanitizedName = SecurityUtils.sanitizeInput(name);
         const sanitizedEmail = SecurityUtils.sanitizeInput(email);
         const sanitizedPhone = SecurityUtils.sanitizeInput(phone);
-
+    
         try {
+            // Check if email already exists
             const { data: existingUsers, error: checkError } = await supabase
                 .from('members')
                 .select('email')
                 .eq('email', sanitizedEmail);
-
+    
             if (existingUsers && existingUsers.length > 0) {
                 throw new Error('Email already registered!');
             }
-
+    
+            // Step 1: Create auth user first
             const { data: authData, error: authError } = await supabase.auth.signUp({
                 email: sanitizedEmail,
                 password: password,
             });
-
+    
             if (authError) throw authError;
-
-            // Wait for user to be fully created
-            await new Promise(resolve => setTimeout(resolve, 2000));
-
+    
+            console.log('Auth user created, waiting for user to be ready...');
+    
+            // Step 2: Wait and get the confirmed user
+            await new Promise(resolve => setTimeout(resolve, 3000));
+            
+            const { data: { user: currentUser }, error: userError } = await supabase.auth.getUser();
+            if (userError || !currentUser) {
+                throw new Error('Failed to get user information after registration');
+            }
+    
+            console.log('Current user confirmed:', currentUser.id);
+    
             let profilePictureUrl = 'images/514-5147412_default-avatar-png.png';
-
+    
             // Upload profile picture if provided
             if (profilePictureFile) {
                 try {
-                    profilePictureUrl = await this.uploadProfilePictureDuringRegistration(profilePictureFile, authData.user.id);
+                    profilePictureUrl = await this.uploadProfilePictureDuringRegistration(profilePictureFile, currentUser.id);
                 } catch (uploadError) {
                     console.error('Error uploading profile picture:', uploadError);
                     profilePictureUrl = 'images/514-5147412_default-avatar-png.png';
                 }
             }
-
-            // Insert member (REGULAR MEMBER ONLY - no admin logic)
+    
+            // Step 3: Insert member with confirmed user_id
             const { error: dbError } = await supabase
                 .from('members')
-                .insert([
-                    {
-                        user_id: authData.user.id,
-                        email: sanitizedEmail,
-                        name: sanitizedName,
-                        phone: sanitizedPhone,
-                        voice_part: voice,
-                        profile_picture: profilePictureUrl,
-                        created_at: new Date()
+                .insert([{
+                    user_id: currentUser.id,
+                    email: sanitizedEmail,
+                    name: sanitizedName,
+                    phone: sanitizedPhone,
+                    voice_part: voice,
+                    profile_picture: profilePictureUrl,
+                    created_at: new Date().toISOString()
+                }]);
+    
+            if (dbError) {
+                console.error('Database error details:', dbError);
+                throw new Error('Failed to create member profile: ' + dbError.message);
+            }
+    
+            console.log('Member record created successfully');
+    
+            // Step 4: Auto-add super admin if it's your email
+            if (sanitizedEmail === 'horatiousfrimpong@gmail.com') {
+                console.log('🎯 Super admin detected, auto-adding to leaders table...');
+                try {
+                    const { error: leaderError } = await supabase
+                        .from('leaders')
+                        .insert([{
+                            user_id: currentUser.id,
+                            email: sanitizedEmail,
+                            role: 'Super Admin',
+                            status: 'approved',
+                            added_by: 'system',
+                            is_active: true,
+                            approved_at: new Date().toISOString()
+                        }]);
+    
+                    if (leaderError) {
+                        console.error('Error adding super admin to leaders:', leaderError);
+                    } else {
+                        console.log('✅ Super admin successfully added to leaders table!');
                     }
-                ]);
-
-            if (dbError) throw dbError;
-
+                } catch (leaderError) {
+                    console.error('Error in super admin setup:', leaderError);
+                }
+            }
+    
             alert('Registration successful! You can now login.');
-            
+    
+            // Auto-login after successful registration
             const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
                 email: sanitizedEmail,
                 password: password
             });
-
+    
             if (loginError) throw loginError;
-            
+    
             window.location.href = 'member-dashboard.html';
-
+    
         } catch (error) {
+            console.error('Registration error:', error);
             alert('Registration failed: ' + error.message);
         }
     }
-
     async logout() {
         try {
             await supabase.auth.signOut();
@@ -474,3 +515,4 @@ class MemberAuth {
 document.addEventListener('DOMContentLoaded', () => {
     new MemberAuth();
 });
+
