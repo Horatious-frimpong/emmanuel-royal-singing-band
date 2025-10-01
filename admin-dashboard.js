@@ -10,27 +10,40 @@ class AdminDashboard {
     }
 
     async checkAdminAccess() {
-        const { data: { user } } = await supabase.auth.getUser();
-        
-        if (user) {
-            // Simple check: if user is in leaders table and approved
-            const { data: leader } = await supabase
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            console.log('🔍 Checking admin access for:', user?.email);
+    
+            if (!user) {
+                console.log('❌ No user logged in');
+                return;
+            }
+    
+            // Check if user is an approved leader
+            const { data: leader, error } = await supabase
                 .from('leaders')
                 .select('*')
                 .eq('email', user.email)
                 .eq('status', 'approved')
                 .eq('is_active', true)
                 .single();
-
+    
+            console.log('Leader query result:', leader);
+    
             if (leader) {
+                console.log('✅ Approved leader detected:', leader.role);
                 document.getElementById('admin-dashboard').style.display = 'block';
                 this.loadDashboardData();
                 
-                // Show leader management for super admin
+                // Show leader management only for Super Admin
                 if (leader.role === 'Super Admin') {
                     this.showLeaderManagement();
                 }
+            } else {
+                console.log('❌ User is not an approved leader');
             }
+        } catch (error) {
+            console.error('Error checking admin access:', error);
         }
     }
 
@@ -615,3 +628,4 @@ class AdminDashboard {
 
 // Initialize admin dashboard
 const adminDashboard = new AdminDashboard();
+
