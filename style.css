@@ -1837,4 +1837,18 @@ input[type="file"]::file-selector-button {
 input[type="file"]::file-selector-button:hover {
     background: #A52A2A;
 }
+/* Dashboard Profile Styles */
+.dashboard-profile {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
 
+.dashboard-profile-img {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #8B0000;
+}
