@@ -1761,4 +1761,21 @@ h2 {
         padding: 0.2rem;
     }
 }
+/* Hide the extra stats in band overview */
+.stat-item:nth-child(2),
+.stat-item:nth-child(3) {
+    display: none;
+}
+
+/* Make the total members stat take full width */
+.stats-grid {
+    grid-template-columns: 1fr !important;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .stats-grid {
+        grid-template-columns: 1fr !important;
+    }
+}
 
