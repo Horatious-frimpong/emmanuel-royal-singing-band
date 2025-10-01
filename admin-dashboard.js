@@ -11,28 +11,91 @@ class AdminDashboard {
     }
 
     async checkAdminAccess() {
-        const { data: { user } } = await supabase.auth.getUser();
-        
-        if (user) {
-            const { data: leader } = await supabase
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            
+            if (user) {
+                console.log('User logged in:', user.email);
+                
+                // Check if user is super admin by email
+                if (user.email === this.superAdminEmail) {
+                    console.log('✅ Super Admin detected by email');
+                    
+                    // Make sure super admin is in leaders table
+                    await this.ensureSuperAdminInLeaders(user);
+                    
+                    document.getElementById('admin-dashboard').style.display = 'block';
+                    this.loadDashboardData();
+                    this.showLeaderManagement();
+                    return;
+                }
+    
+                // Check if user is an approved leader
+                const { data: leader } = await supabase
+                    .from('leaders')
+                    .select('*')
+                    .eq('email', user.email)
+                    .eq('status', 'approved')
+                    .eq('is_active', true)
+                    .single();
+    
+                if (leader) {
+                    console.log('✅ Approved leader detected');
+                    document.getElementById('admin-dashboard').style.display = 'block';
+                    this.loadDashboardData();
+                    
+                    // Also show leader management if super admin
+                    if (user.email === this.superAdminEmail) {
+                        this.showLeaderManagement();
+                    }
+                } else {
+                    console.log('❌ User is not an approved leader');
+                }
+            }
+        } catch (error) {
+            console.error('Error checking admin access:', error);
+        }
+    }
+    
+    // New function to ensure super admin is in leaders table
+    async ensureSuperAdminInLeaders(user) {
+        try {
+            // Check if super admin already exists in leaders
+            const { data: existingLeader } = await supabase
                 .from('leaders')
                 .select('*')
                 .eq('email', user.email)
-                .eq('status', 'approved')
-                .eq('is_active', true)
                 .single();
-
-            if (leader || user.email === this.superAdminEmail) {
-                document.getElementById('admin-dashboard').style.display = 'block';
-                this.loadDashboardData();
+    
+            if (!existingLeader) {
+                console.log('Adding super admin to leaders table...');
                 
-                if (user.email === this.superAdminEmail) {
-                    this.showLeaderManagement();
+                // Insert super admin into leaders table
+                const { error } = await supabase
+                    .from('leaders')
+                    .insert([
+                        {
+                            user_id: user.id,
+                            email: user.email,
+                            role: 'Super Admin',
+                            status: 'approved',
+                            added_by: 'system',
+                            is_active: true
+                        }
+                    ]);
+    
+                if (error) {
+                    console.error('Error adding super admin to leaders:', error);
+                } else {
+                    console.log('✅ Super admin added to leaders table');
                 }
+            } else {
+                console.log('✅ Super admin already in leaders table');
             }
+        } catch (error) {
+            console.error('Error ensuring super admin in leaders:', error);
         }
     }
-
     showLeaderManagement() {
         const leaderSection = document.querySelector('.leader-management');
         if (leaderSection) leaderSection.style.display = 'block';
@@ -729,4 +792,5 @@ class AdminDashboard {
 }
 
 // Make it globally accessible
+
 const adminDashboard = new AdminDashboard();
