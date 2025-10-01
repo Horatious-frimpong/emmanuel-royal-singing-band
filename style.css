@@ -1680,7 +1680,36 @@ h2 {
         gap: 0.5rem;
         flex: 1; /* Take available space */
     }
-    
+    /* Edit Profile Form Styles */
+.form-buttons {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.form-buttons .hero-btn {
+    flex: 1;
+}
+
+.form-buttons .secondary-btn {
+    background: #6c757d !important;
+}
+
+.form-buttons .secondary-btn:hover {
+    background: #5a6268 !important;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: #333;
+}
+
+.form-group input[readonly] {
+    background-color: #f8f9fa;
+    cursor: not-allowed;
+}
     .nav-logo {
         width: 30px;
         height: 30px;
@@ -1808,3 +1837,4 @@ input[type="file"]::file-selector-button {
 input[type="file"]::file-selector-button:hover {
     background: #A52A2A;
 }
+
