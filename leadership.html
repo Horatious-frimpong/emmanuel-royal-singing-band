@@ -522,66 +522,15 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabase-config-enhanced.js"></script>
     <script src="security-utils.js"></script>
+    <script src="profile-utils.js"></script>      <!-- Load this first -->
+    <script src="leadership-profile.js"></script>
     <script src="admin-dashboard.js"></script>
     <script src="script.js"></script>
     <script>
-    // Load leader profile pictures
-    async function loadLeaderProfilePictures() {
-        try {
-            const { data: leaders, error } = await supabase
-                .from('leaders')
-                .select('email, role');
-                
-            if (leaders) {
-                leaders.forEach(leader => {
-                    // Find the executive card for this leader
-                    const executiveCards = document.querySelectorAll('.executive-card');
-                    executiveCards.forEach(card => {
-                        const roleElement = card.querySelector('.position');
-                        if (roleElement && roleElement.textContent.includes(leader.role)) {
-                            loadLeaderPicture(card, leader.email);
-                        }
-                    });
-                });
-            }
-        } catch (error) {
-            console.error('Error loading leader data:', error);
-        }
-    }
-    
-    async function loadLeaderPicture(card, email) {
-        try {
-            // First try to get member data to get profile picture
-            const { data: member, error } = await supabase
-                .from('members')
-                .select('profile_picture')
-                .eq('email', email)
-                .single();
-                
-            if (member && member.profile_picture) {
-                const img = card.querySelector('img');
-                if (img) {
-                    if (member.profile_picture.startsWith('http')) {
-                        img.src = member.profile_picture;
-                    } else {
-                        img.src = member.profile_picture;
-                    }
-                    img.onerror = function() {
-                        this.src = 'images/514-5147412_default-avatar-png.png';
-                    };
-                }
-            }
-        } catch (error) {
-            console.log('No profile picture found for:', email);
-        }
-    }
-    
-    // Load pictures when page loads
-    document.addEventListener('DOMContentLoaded', loadLeaderProfilePictures);
-    </script>
 </body>
 
 </html>
+
 
 
 
