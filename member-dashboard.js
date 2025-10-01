@@ -24,22 +24,46 @@ class MemberDashboard {
 
     async loadUserProfile() {
         try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return;
+    
             const { data: member, error } = await supabase
                 .from('members')
                 .select('name, email, phone, voice_part, profile_picture')
-                .eq('user_id', this.currentUser.id)
+                .eq('user_id', user.id)
                 .single();
-
+    
             if (member && member.name) {
                 this.memberData = member;
-                // FIX: Show actual member name instead of "Member"
-                document.getElementById('memberName').textContent = SecurityUtils.preventXSS(member.name);
-            } else {
-                document.getElementById('memberName').textContent = 'Member';
+                
+                // FIXED: Show actual member name
+                const memberNameElement = document.getElementById('memberName');
+                if (memberNameElement) {
+                    memberNameElement.textContent = SecurityUtils.preventXSS(member.name);
+                }
+                
+                // FIXED: Load profile picture in dashboard
+                const profileImg = document.getElementById('dashboardProfileImg');
+                if (profileImg && member.profile_picture) {
+                    if (member.profile_picture.startsWith('http')) {
+                        // It's a Supabase Storage URL
+                        profileImg.src = member.profile_picture;
+                        profileImg.onerror = function() {
+                            console.error('Failed to load profile picture from URL:', member.profile_picture);
+                            this.src = 'images/514-5147412_default-avatar-png.png';
+                        };
+                    } else if (member.profile_picture.startsWith('images/')) {
+                        // It's a local image path
+                        profileImg.src = member.profile_picture;
+                    } else {
+                        // Default fallback
+                        profileImg.src = 'images/514-5147412_default-avatar-png.png';
+                    }
+                    console.log('Dashboard profile image set to:', profileImg.src);
+                }
             }
         } catch (error) {
-            console.error('Error loading user profile:', error);
-            document.getElementById('memberName').textContent = 'Member';
+            console.error('Error loading user profile in dashboard:', error);
         }
     }
 
@@ -460,4 +484,5 @@ class MemberDashboard {
 document.addEventListener('DOMContentLoaded', () => {
     new MemberDashboard();
 });
+
 
