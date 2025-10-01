@@ -13,47 +13,99 @@ class AdminDashboard {
     async checkAdminAccess() {
         try {
             const { data: { user } } = await supabase.auth.getUser();
+            console.log('🔍 Checking admin access for:', user?.email);
             
-            if (user) {
-                console.log('User logged in:', user.email);
+            if (!user) {
+                console.log('❌ No user logged in');
+                return;
+            }
+    
+            // Check if user is super admin by email
+            if (user.email === this.superAdminEmail) {
+                console.log('✅ Super Admin detected by email:', user.email);
                 
-                // Check if user is super admin by email
+                // Make sure super admin is in leaders table
+                await this.ensureSuperAdminInLeaders(user);
+                
+                document.getElementById('admin-dashboard').style.display = 'block';
+                this.loadDashboardData();
+                this.showLeaderManagement();
+                return;
+            }
+    
+            // Check if user is an approved leader
+            const { data: leader, error } = await supabase
+                .from('leaders')
+                .select('*')
+                .eq('email', user.email)
+                .eq('status', 'approved')
+                .eq('is_active', true)
+                .single();
+    
+            console.log('Leader query result:', leader);
+    
+            if (leader) {
+                console.log('✅ Approved leader detected:', leader.role);
+                document.getElementById('admin-dashboard').style.display = 'block';
+                this.loadDashboardData();
+                
+                // Show leader management only for super admin
                 if (user.email === this.superAdminEmail) {
-                    console.log('✅ Super Admin detected by email');
-                    
-                    // Make sure super admin is in leaders table
-                    await this.ensureSuperAdminInLeaders(user);
-                    
-                    document.getElementById('admin-dashboard').style.display = 'block';
-                    this.loadDashboardData();
                     this.showLeaderManagement();
-                    return;
                 }
-    
-                // Check if user is an approved leader
-                const { data: leader } = await supabase
+            } else {
+                console.log('❌ User is not an approved leader');
+                console.log('User email:', user.email);
+                console.log('Looking for email in leaders table...');
+                
+                // Debug: Check what's actually in the leaders table
+                const { data: allLeaders } = await supabase
                     .from('leaders')
-                    .select('*')
-                    .eq('email', user.email)
-                    .eq('status', 'approved')
-                    .eq('is_active', true)
-                    .single();
-    
-                if (leader) {
-                    console.log('✅ Approved leader detected');
-                    document.getElementById('admin-dashboard').style.display = 'block';
-                    this.loadDashboardData();
-                    
-                    // Also show leader management if super admin
-                    if (user.email === this.superAdminEmail) {
-                        this.showLeaderManagement();
-                    }
-                } else {
-                    console.log('❌ User is not an approved leader');
-                }
+                    .select('*');
+                console.log('All leaders in table:', allLeaders);
             }
         } catch (error) {
             console.error('Error checking admin access:', error);
+        }
+    }
+    
+    async ensureSuperAdminInLeaders(user) {
+        try {
+            // Check if super admin already exists in leaders
+            const { data: existingLeader } = await supabase
+                .from('leaders')
+                .select('*')
+                .eq('email', user.email)
+                .single();
+    
+            if (!existingLeader) {
+                console.log('➕ Adding super admin to leaders table...');
+                
+                // Insert super admin into leaders table
+                const { error } = await supabase
+                    .from('leaders')
+                    .insert([
+                        {
+                            user_id: user.id,
+                            email: user.email,
+                            role: 'Super Admin',
+                            status: 'approved',
+                            added_by: 'system',
+                            is_active: true,
+                            approved_at: new Date()
+                        }
+                    ]);
+    
+                if (error) {
+                    console.error('❌ Error adding super admin to leaders:', error);
+                } else {
+                    console.log('✅ Super admin added to leaders table');
+                }
+            } else {
+                console.log('✅ Super admin already in leaders table:', existingLeader);
+            }
+        } catch (error) {
+            console.error('Error ensuring super admin in leaders:', error);
         }
     }
     
@@ -794,3 +846,4 @@ class AdminDashboard {
 // Make it globally accessible
 
 const adminDashboard = new AdminDashboard();
+
