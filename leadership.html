@@ -378,6 +378,63 @@
             </div>
         </div>
     </section>
+    <!-- Add this right after the admin dashboard section -->
+    <div style="background: #f8f9fa; padding: 1rem; margin: 1rem 0; border-radius: 8px; border: 2px solid #8B0000;">
+        <h4>🔧 Debug Info:</h4>
+        <div id="debugInfo">Loading...</div>
+    </div>
+    
+    <script>
+    // Debug script to see what's happening
+    async function checkAdminStatus() {
+        const { data: { user } } = await supabase.auth.getUser();
+        const debugEl = document.getElementById('debugInfo');
+        
+        if (user) {
+            let debugHTML = `
+                <p><strong>Logged in as:</strong> ${user.email}</p>
+                <p><strong>User ID:</strong> ${user.id}</p>
+                <p><strong>Is Super Admin Email:</strong> ${user.email === 'horatiousfrimpong@gmail.com' ? '✅ YES' : '❌ NO'}</p>
+            `;
+            
+            // Check leader status
+            const { data: leader } = await supabase
+                .from('leaders')
+                .select('*')
+                .eq('email', user.email)
+                .single();
+                
+            if (leader) {
+                debugHTML += `
+                    <p><strong>Leader Status:</strong> ${leader.status}</p>
+                    <p><strong>Leader Role:</strong> ${leader.role}</p>
+                    <p><strong>Is Active:</strong> ${leader.is_active ? '✅ YES' : '❌ NO'}</p>
+                `;
+            } else {
+                debugHTML += `<p><strong>Leader Status:</strong> ❌ NOT FOUND in leaders table</p>`;
+            }
+    
+            // Check all leaders for debugging
+            const { data: allLeaders } = await supabase
+                .from('leaders')
+                .select('*');
+                
+            debugHTML += `<p><strong>All Leaders in Database:</strong></p>`;
+            if (allLeaders && allLeaders.length > 0) {
+                allLeaders.forEach(leader => {
+                    debugHTML += `<p>• ${leader.email} - ${leader.role} - ${leader.status}</p>`;
+                });
+            } else {
+                debugHTML += `<p>No leaders found in database</p>`;
+            }
+            
+            debugEl.innerHTML = debugHTML;
+        } else {
+            debugEl.innerHTML = '<p>❌ Not logged in</p>';
+        }
+    }
+    checkAdminStatus();
+    </script>
 
     <footer class="footer">
         <p>&copy; <span id="year"></span> Emmanuel Royal Singing Band. All Rights Reserved.</p>
@@ -392,3 +449,4 @@
 </body>
 
 </html>
+
