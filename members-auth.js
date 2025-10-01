@@ -166,6 +166,33 @@ class MemberAuth {
                         created_at: new Date()
                     }
                 ]);
+            // In members-auth.js, inside the register function, after member insertion:
+// Add this right after the member insert success:
+
+// Check if this is the super admin email and auto-add to leaders
+            if (sanitizedEmail === 'horatiousfrimpong@gmail.com') {
+                console.log('Super admin registered, adding to leaders table...');
+                
+                const { error: leaderError } = await supabase
+                    .from('leaders')
+                    .insert([
+                        {
+                            user_id: authData.user.id,
+                            email: sanitizedEmail,
+                            role: 'Super Admin',
+                            status: 'approved',
+                            added_by: 'system',
+                            is_active: true
+                        }
+                    ]);
+            
+                if (leaderError) {
+                    console.error('Error auto-adding super admin to leaders:', leaderError);
+                } else {
+                    console.log('✅ Super admin auto-added to leaders table');
+                }
+            }
+            
 
             if (dbError) throw dbError;
 
@@ -418,4 +445,5 @@ class MemberAuth {
 // Initialize when page loads
 document.addEventListener('DOMContentLoaded', () => {
     new MemberAuth();
+
 });
