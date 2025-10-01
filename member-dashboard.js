@@ -424,9 +424,40 @@ class MemberDashboard {
             container.innerHTML = '<p class="no-suggestions">You haven\'t submitted any suggestions yet.</p>';
         }
     }
+    // Add this to your MemberDashboard class in member-dashboard.js
+    async loadUserProfile() {
+        try {
+            const { data: member, error } = await supabase
+                .from('members')
+                .select('name, email, phone, voice_part, profile_picture')
+                .eq('user_id', this.currentUser.id)
+                .single();
+    
+            if (member && member.name) {
+                this.memberData = member;
+                document.getElementById('memberName').textContent = SecurityUtils.preventXSS(member.name);
+                
+                // FIXED: Load profile picture in dashboard
+                const profileImg = document.getElementById('dashboardProfileImg');
+                if (profileImg && member.profile_picture) {
+                    if (member.profile_picture.startsWith('http')) {
+                        profileImg.src = member.profile_picture;
+                        profileImg.onerror = function() {
+                            this.src = 'images/514-5147412_default-avatar-png.png';
+                        };
+                    } else {
+                        profileImg.src = member.profile_picture;
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('Error loading user profile in dashboard:', error);
+        }
+    }
 }
 
 // Initialize dashboard when page loads
 document.addEventListener('DOMContentLoaded', () => {
     new MemberDashboard();
 });
+
