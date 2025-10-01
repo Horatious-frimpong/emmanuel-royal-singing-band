@@ -2,6 +2,7 @@
 class MemberDashboard {
     constructor() {
         this.currentUser = null;
+        this.memberData = null;
         this.init();
     }
 
@@ -14,12 +15,11 @@ class MemberDashboard {
     async checkAuth() {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
-            // If not logged in, redirect to members page
             window.location.href = 'members.html';
             return;
         }
         this.currentUser = user;
-        this.loadUserProfile();
+        await this.loadUserProfile();
     }
 
     async loadUserProfile() {
@@ -31,10 +31,15 @@ class MemberDashboard {
                 .single();
 
             if (member && member.name) {
+                this.memberData = member;
+                // FIX: Show actual member name instead of "Member"
                 document.getElementById('memberName').textContent = SecurityUtils.preventXSS(member.name);
+            } else {
+                document.getElementById('memberName').textContent = 'Member';
             }
         } catch (error) {
             console.error('Error loading user profile:', error);
+            document.getElementById('memberName').textContent = 'Member';
         }
     }
 
@@ -86,7 +91,6 @@ class MemberDashboard {
 
     async loadUpcomingEvents() {
         try {
-            // Try to get events from Supabase
             const { data, error } = await supabase
                 .from('events')
                 .select('*')
@@ -97,28 +101,8 @@ class MemberDashboard {
             if (data && data.length > 0) {
                 this.displayUpcomingEvents(data);
             } else {
-                // Show demo events if no real events exist
-                const demoEvents = [
-                    { 
-                        title: "Sunday Service", 
-                        event_date: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(), 
-                        location: "Main Church", 
-                        description: "Regular Sunday worship service"
-                    },
-                    { 
-                        title: "Band Practice", 
-                        event_date: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000).toISOString(), 
-                        location: "Church Hall", 
-                        description: "Weekly band rehearsal"
-                    },
-                    { 
-                        title: "Christmas Carols", 
-                        event_date: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString(), 
-                        location: "Church Premises", 
-                        description: "Special Christmas carol service"
-                    }
-                ];
-                this.displayUpcomingEvents(demoEvents);
+                // Show empty state - no demo events
+                this.displayUpcomingEvents([]);
             }
         } catch (error) {
             console.error('Error loading events:', error);
@@ -137,19 +121,14 @@ class MemberDashboard {
 
         container.innerHTML = events.map(event => {
             const eventDate = new Date(event.event_date);
-            // ✅ ADDED: XSS protection
             const safeTitle = SecurityUtils.preventXSS(event.title);
             const safeLocation = SecurityUtils.preventXSS(event.location);
-            const safeDescription = event.description ? SecurityUtils.preventXSS(event.description) : '';           
+            const safeDescription = event.description ? SecurityUtils.preventXSS(event.description) : '';
+            
             const formattedDate = eventDate.toLocaleDateString('en-US', { 
                 weekday: 'short', 
                 month: 'short', 
                 day: 'numeric' 
-            });
-            const formattedTime = eventDate.toLocaleTimeString('en-US', { 
-                hour: 'numeric', 
-                minute: '2-digit',
-                hour12: true 
             });
 
             return `
@@ -174,7 +153,6 @@ class MemberDashboard {
 
     async loadAnnouncements() {
         try {
-            // Try to get announcements from Supabase
             const { data, error } = await supabase
                 .from('announcements')
                 .select('*')
@@ -184,28 +162,8 @@ class MemberDashboard {
             if (data && data.length > 0) {
                 this.displayAnnouncements(data);
             } else {
-                // Show demo announcements if no real announcements exist
-                const demoAnnouncements = [
-                    { 
-                        title: "Welcome to Our New Website!", 
-                        message: "We're excited to launch our new band website. Explore all the features and stay connected with the band.", 
-                        created_at: new Date().toISOString(), 
-                        is_urgent: false 
-                    },
-                    { 
-                        title: "Christmas Rehearsal Schedule", 
-                        message: "Special rehearsal times for Christmas program starting next week. Please check the calendar for details.", 
-                        created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), 
-                        is_urgent: true 
-                    },
-                    { 
-                        title: "New Song Alert", 
-                        message: "We'll be learning 'O Come All Ye Faithful' this week. Practice files available in the music section.", 
-                        created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), 
-                        is_urgent: false 
-                    }
-                ];
-                this.displayAnnouncements(demoAnnouncements);
+                // Show empty state - no demo announcements
+                this.displayAnnouncements([]);
             }
         } catch (error) {
             console.error('Error loading announcements:', error);
@@ -244,46 +202,24 @@ class MemberDashboard {
 
     async loadBandStats() {
         try {
-            // Get total members count
+            // Get total members count only
             const { count: totalMembers, error: membersError } = await supabase
                 .from('members')
                 .select('*', { count: 'exact', head: true });
 
-            // Get upcoming practices count (this week)
-            const startOfWeek = new Date();
-            startOfWeek.setHours(0, 0, 0, 0);
-            startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay()); // Sunday
-            const endOfWeek = new Date(startOfWeek);
-            endOfWeek.setDate(endOfWeek.getDate() + 6); // Saturday
-
-            const { count: upcomingPractices, error: practicesError } = await supabase
-                .from('events')
-                .select('*', { count: 'exact', head: true })
-                .like('title', '%Practice%')
-                .gte('event_date', startOfWeek.toISOString())
-                .lte('event_date', endOfWeek.toISOString());
-
-            // Get new songs count (this month)
-            const startOfMonth = new Date();
-            startOfMonth.setDate(1);
-            startOfMonth.setHours(0, 0, 0, 0);
-
-            const { count: newSongs, error: songsError } = await supabase
-                .from('music_repertoire')
-                .select('*', { count: 'exact', head: true })
-                .gte('added_at', startOfMonth.toISOString());
-
-            // Update the stats display
-            document.getElementById('totalMembers').textContent = totalMembers || '45';
-            document.getElementById('upcomingPractices').textContent = upcomingPractices || '2';
-            document.getElementById('newSongs').textContent = newSongs || '3';
+            // Update only the total members stat
+            document.getElementById('totalMembers').textContent = totalMembers || '0';
+            
+            // Remove the other stats by setting them to empty or "0"
+            document.getElementById('upcomingPractices').textContent = '0';
+            document.getElementById('newSongs').textContent = '0';
 
         } catch (error) {
             console.error('Error loading band stats:', error);
-            // Fallback demo stats
-            document.getElementById('totalMembers').textContent = '45';
-            document.getElementById('upcomingPractices').textContent = '2';
-            document.getElementById('newSongs').textContent = '3';
+            // Fallback - show zeros
+            document.getElementById('totalMembers').textContent = '0';
+            document.getElementById('upcomingPractices').textContent = '0';
+            document.getElementById('newSongs').textContent = '0';
         }
     }
 
@@ -299,7 +235,6 @@ class MemberDashboard {
         }
 
         try {
-            // First, try to save to Supabase if table exists
             let suggestionSaved = false;
             
             try {
@@ -368,134 +303,4 @@ class MemberDashboard {
         }
     }
 
-    async submitGeneralSuggestion() {
-        const type = document.getElementById('suggestionType').value;
-        const title = document.getElementById('suggestionTitle').value;
-        const description = document.getElementById('suggestionDescription').value;
-
-        if (!type || !title || !description) {
-            alert('Please fill in all fields');
-            return;
-        }
-
-        try {
-            let suggestionSaved = false;
-            
-            // Try to save to Supabase
-            try {
-                const { data, error } = await supabase
-                    .from('suggestions')
-                    .insert([
-                        {
-                            user_id: this.currentUser.id,
-                            type: type,
-                            title: title,
-                            description: description
-                        }
-                    ]);
-
-                if (!error) {
-                    suggestionSaved = true;
-                }
-            } catch (dbError) {
-                console.log('Suggestions table might not exist, using fallback');
-            }
-
-            // Fallback to localStorage
-            if (!suggestionSaved) {
-                const suggestions = JSON.parse(localStorage.getItem('member_suggestions') || '[]');
-                suggestions.push({
-                    id: Date.now(),
-                    user_id: this.currentUser.id,
-                    type: type,
-                    title: title,
-                    description: description,
-                    created_at: new Date().toISOString(),
-                    status: 'pending'
-                });
-                localStorage.setItem('member_suggestions', JSON.stringify(suggestions));
-            }
-
-            alert(`💡 Suggestion "${title}" submitted successfully! Thank you for your input.`);
-            document.getElementById('suggestionForm').reset();
-            this.loadMySuggestions();
-
-        } catch (error) {
-            alert('Error submitting suggestion: ' + error.message);
-        }
-    }
-
-    async loadMySuggestions() {
-        const container = document.getElementById('mySuggestionsList');
-        if (!container) return;
-
-        try {
-            let mySuggestions = [];
-
-            // Try to get from Supabase first
-            try {
-                const { data, error } = await supabase
-                    .from('suggestions')
-                    .select('*')
-                    .eq('user_id', this.currentUser.id)
-                    .order('created_at', { ascending: false })
-                    .limit(5);
-
-                if (data) {
-                    mySuggestions = data;
-                }
-            } catch (dbError) {
-                console.log('Suggestions table might not exist, checking localStorage');
-            }
-
-            // If no Supabase data, check localStorage
-            if (mySuggestions.length === 0) {
-                const localSuggestions = JSON.parse(localStorage.getItem('member_suggestions') || '[]');
-                mySuggestions = localSuggestions.filter(suggestion => 
-                    suggestion.user_id === this.currentUser.id
-                ).slice(0, 5);
-            }
-
-            if (mySuggestions.length === 0) {
-                container.innerHTML = '<p class="no-suggestions">You haven\'t submitted any suggestions yet.</p>';
-                return;
-            }
-
-            container.innerHTML = mySuggestions.map(suggestion => {
-                const suggestionDate = new Date(suggestion.created_at);
-                const formattedDate = suggestionDate.toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'short',
-                    day: 'numeric'
-                });
-
-                const typeIcon = suggestion.type === 'song' ? '🎵' : 
-                               suggestion.type === 'event' ? '📅' : 
-                               suggestion.type === 'improvement' ? '💡' : '💬';
-
-                return `
-                    <div class="suggestion-item">
-                        <div class="suggestion-header">
-                            <span class="suggestion-type">${typeIcon} ${suggestion.type}</span>
-                            <span class="suggestion-date">${formattedDate}</span>
-                        </div>
-                        <h5>${suggestion.title}</h5>
-                        <p>${suggestion.description}</p>
-                        <div class="suggestion-status ${suggestion.status}">
-                            Status: ${suggestion.status || 'pending'}
-                        </div>
-                    </div>
-                `;
-            }).join('');
-
-        } catch (error) {
-            console.error('Error loading suggestions:', error);
-            container.innerHTML = '<p class="no-suggestions">You haven\'t submitted any suggestions yet.</p>';
-        }
-    }
-}
-
-// Initialize dashboard when page loads
-document.addEventListener('DOMContentLoaded', () => {
-    new MemberDashboard();
-});
+    async
