@@ -155,29 +155,49 @@ class MemberAuth {
     
             if (authError) throw authError;
     
-            // Step 2: Wait 2 seconds for the user to be fully created in auth system
-            console.log('Waiting for user to be fully created...');
-            await new Promise(resolve => setTimeout(resolve, 2000));
+            console.log('Auth user created, waiting for user to be ready...');
+    
+            // Step 2: Wait and verify user exists with retry logic
+            let currentUser = null;
+            let retries = 0;
+            const maxRetries = 5;
+    
+            while (retries < maxRetries && !currentUser) {
+                await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
+                const { data: { user } } = await supabase.auth.getUser();
+                
+                if (user && user.id) {
+                    currentUser = user;
+                    console.log('✅ User confirmed ready with ID:', user.id);
+                    break;
+                }
+                
+                retries++;
+                console.log(`Retry ${retries}/${maxRetries}: User not ready yet...`);
+            }
+    
+            if (!currentUser) {
+                throw new Error('User creation timed out. Please try again.');
+            }
     
             let profilePictureUrl = 'images/514-5147412_default-avatar-png.png';
     
             // Upload profile picture if provided
             if (profilePictureFile) {
                 try {
-                    profilePictureUrl = await this.uploadProfilePictureDuringRegistration(profilePictureFile, authData.user.id);
+                    profilePictureUrl = await this.uploadProfilePictureDuringRegistration(profilePictureFile, currentUser.id);
                 } catch (uploadError) {
                     console.error('Error uploading profile picture:', uploadError);
-                    // Continue with default picture if upload fails
                     profilePictureUrl = 'images/514-5147412_default-avatar-png.png';
                 }
             }
     
-            // Step 3: Insert member with profile picture (either uploaded or default)
+            // Step 3: Insert member with the CONFIRMED user_id
             const { error: dbError } = await supabase
                 .from('members')
                 .insert([
                     {
-                        user_id: authData.user.id,
+                        user_id: currentUser.id, // Use the confirmed user ID
                         email: sanitizedEmail,
                         name: sanitizedName,
                         phone: sanitizedPhone,
@@ -187,6 +207,11 @@ class MemberAuth {
                     }
                 ]);
     
+            if (dbError) {
+                console.error('Database error details:', dbError);
+                throw new Error('Failed to create member profile: ' + dbError.message);
+            }
+    
             // Auto-add super admin to leaders table if it's your email
             if (sanitizedEmail === 'horatiousfrimpong@gmail.com') {
                 console.log('🎯 Super admin detected, auto-adding to leaders table...');
@@ -195,7 +220,7 @@ class MemberAuth {
                     .from('leaders')
                     .insert([
                         {
-                            user_id: authData.user.id,
+                            user_id: currentUser.id,
                             email: sanitizedEmail,
                             role: 'Super Admin',
                             status: 'approved',
@@ -210,8 +235,6 @@ class MemberAuth {
                     console.log('✅ Super admin successfully added to leaders table!');
                 }
             }
-    
-            if (dbError) throw dbError;
     
             alert('Registration successful! You can now login.');
             
@@ -229,46 +252,6 @@ class MemberAuth {
             alert('Registration failed: ' + error.message);
         }
     }
-    
-    // Make sure this upload function is also in your code:
-    async uploadProfilePictureDuringRegistration(file, userId) {
-        const validTypes = {
-            'image/jpeg': true,
-            'image/jpg': true, 
-            'image/png': true,
-            'image/gif': true
-        };
-        
-        const maxSize = 2 * 1024 * 1024; // 2MB
-    
-        if (!validTypes[file.type]) {
-            throw new Error('Please select a valid image file (JPEG, PNG, GIF only)');
-        }
-    
-        if (file.size > maxSize) {
-            throw new Error('Image size must be less than 2MB');
-        }
-    
-        const sanitizedFilename = SecurityUtils.sanitizeFilename(file.name);
-        
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${userId}-${Date.now()}.${fileExt}`;
-        
-        const { data: uploadData, error: uploadError } = await supabase.storage
-            .from('profile-pictures')
-            .upload(fileName, file);
-    
-        if (uploadError) throw uploadError;
-    
-        const { data: urlData } = await supabase.storage
-            .from('profile-pictures')
-            .getPublicUrl(fileName);
-    
-        if (!urlData.publicUrl) throw new Error('Could not get image URL');
-    
-        return urlData.publicUrl;
-    }
-
     async logout() {
         try {
             await supabase.auth.signOut();
@@ -504,6 +487,7 @@ document.addEventListener('DOMContentLoaded', () => {
     new MemberAuth();
 
 });
+
 
 
 
