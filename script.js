@@ -75,12 +75,6 @@ function showServiceWorkerUpdateNotification() {
     }
   }, 10000);
 }
-
-// HTTPS enforcement (your existing code)
-if (window.location.protocol === 'http:' && window.location.hostname !== 'localhost' && !window.location.hostname.includes('127.0.0.1')) {
-  window.location.href = window.location.href.replace('http:', 'https:');
-}
-
 // ... rest of your existing script.js code ...
 // script.js - Global utilities for all pages
 
@@ -267,4 +261,5 @@ document.addEventListener('DOMContentLoaded', async function() {
         }
     });
 });
+
 
