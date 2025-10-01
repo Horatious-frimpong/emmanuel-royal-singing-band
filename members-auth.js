@@ -179,19 +179,21 @@ class MemberAuth {
     
             console.log('Current user confirmed:', currentUser.id);
     
+// In the register() function, replace the profile picture section:
             let profilePictureUrl = 'images/514-5147412_default-avatar-png.png';
-    
+            
             // Upload profile picture if provided
             if (profilePictureFile) {
                 try {
                     profilePictureUrl = await this.uploadProfilePictureDuringRegistration(profilePictureFile, currentUser.id);
+                    console.log('Profile picture uploaded:', profilePictureUrl);
                 } catch (uploadError) {
                     console.error('Error uploading profile picture:', uploadError);
                     profilePictureUrl = 'images/514-5147412_default-avatar-png.png';
                 }
             }
-    
-            // Step 3: Insert member with confirmed user_id
+            
+            // Insert member with profile picture
             const { error: dbError } = await supabase
                 .from('members')
                 .insert([{
@@ -200,7 +202,7 @@ class MemberAuth {
                     name: sanitizedName,
                     phone: sanitizedPhone,
                     voice_part: voice,
-                    profile_picture: profilePictureUrl,
+                    profile_picture: profilePictureUrl, // This should be the URL from Supabase Storage
                     created_at: new Date().toISOString()
                 }]);
     
@@ -306,21 +308,33 @@ class MemberAuth {
                 .select('*')
                 .eq('user_id', userId)
                 .single();
-
+    
             if (data) {
                 const userName = document.getElementById('userName');
                 const userEmail = document.getElementById('userEmail');
                 const userPhone = document.getElementById('userPhone');
                 const userVoice = document.getElementById('userVoice');
                 const profileImg = document.getElementById('profileImg');
-
+    
                 if (userName) userName.textContent = data.name;
                 if (userEmail) userEmail.textContent = data.email;
                 if (userPhone) userPhone.textContent = data.phone;
                 if (userVoice) userVoice.textContent = data.voice_part;
                 
-                if (profileImg && data.profile_picture) {
-                    profileImg.src = data.profile_picture;
+                // FIXED: Better profile picture handling
+                if (profileImg) {
+                    if (data.profile_picture && data.profile_picture.startsWith('http')) {
+                        // It's a Supabase Storage URL
+                        profileImg.src = data.profile_picture;
+                        profileImg.onerror = function() {
+                            console.error('Failed to load profile picture:', data.profile_picture);
+                            this.src = 'images/514-5147412_default-avatar-png.png';
+                        };
+                    } else {
+                        // It's a local path or default
+                        profileImg.src = data.profile_picture || 'images/514-5147412_default-avatar-png.png';
+                    }
+                    console.log('Setting profile image to:', profileImg.src);
                 }
             }
         } catch (error) {
@@ -354,9 +368,22 @@ class MemberAuth {
     createMemberCard(member) {
         const card = document.createElement('div');
         card.className = 'member-card';
+        
+        // FIXED: Better image URL handling
+        let imageUrl = 'images/514-5147412_default-avatar-png.png';
+        if (member.profile_picture) {
+            if (member.profile_picture.startsWith('http')) {
+                imageUrl = member.profile_picture;
+            } else if (member.profile_picture.startsWith('images/')) {
+                imageUrl = member.profile_picture;
+            }
+        }
+        
         card.innerHTML = `
             <div class="member-img">
-                <img src="${member.profile_picture || 'images/514-5147412_default-avatar-png.png'}" alt="${member.name}" onerror="this.src='images/514-5147412_default-avatar-png.png'">
+                <img src="${imageUrl}" alt="${member.name}" 
+                     onerror="this.src='images/514-5147412_default-avatar-png.png'"
+                     loading="lazy">
             </div>
             <div class="member-info">
                 <h3>${member.name}</h3>
@@ -567,6 +594,7 @@ class MemberAuth {
 document.addEventListener('DOMContentLoaded', () => {
     new MemberAuth();
 });
+
 
 
 
