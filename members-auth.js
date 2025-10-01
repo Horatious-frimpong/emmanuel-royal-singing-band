@@ -485,28 +485,29 @@ class MemberAuth {
     async editProfile() {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
-
-        const currentPhone = document.getElementById('userPhone')?.textContent;
-        const newPhone = prompt('Enter new phone number:', currentPhone);
-        
-        if (newPhone && newPhone !== currentPhone) {
-            try {
-                const { error } = await supabase
-                    .from('members')
-                    .update({
-                        phone: newPhone
-                    })
-                    .eq('user_id', user.id);
-
-                if (error) throw error;
-                
-                this.loadUserProfile(user.id);
-                this.loadAllMembers();
-                alert('Profile updated successfully!');
-            } catch (error) {
-                console.error('Error updating profile:', error);
-                alert('Error updating profile: ' + error.message);
-            }
+    
+        try {
+            // Load current user data
+            const { data: member, error } = await supabase
+                .from('members')
+                .select('*')
+                .eq('user_id', user.id)
+                .single();
+    
+            if (error) throw error;
+    
+            // Populate the edit form with current data
+            document.getElementById('editName').value = member.name || '';
+            document.getElementById('editEmail').value = member.email || '';
+            document.getElementById('editPhone').value = member.phone || '';
+            document.getElementById('editVoice').value = member.voice_part || '';
+    
+            // Show edit form, hide profile view
+            this.showSection('editProfileSection');
+            
+        } catch (error) {
+            console.error('Error loading profile for editing:', error);
+            alert('Error loading profile data: ' + error.message);
         }
     }
 }
@@ -515,4 +516,5 @@ class MemberAuth {
 document.addEventListener('DOMContentLoaded', () => {
     new MemberAuth();
 });
+
 
