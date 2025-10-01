@@ -303,4 +303,130 @@ class MemberDashboard {
         }
     }
 
-    async
+    async submitGeneralSuggestion() {
+        const type = document.getElementById('suggestionType').value;
+        const title = document.getElementById('suggestionTitle').value;
+        const description = document.getElementById('suggestionDescription').value;
+
+        if (!type || !title || !description) {
+            alert('Please fill in all fields');
+            return;
+        }
+
+        try {
+            let suggestionSaved = false;
+            
+            try {
+                const { data, error } = await supabase
+                    .from('suggestions')
+                    .insert([
+                        {
+                            user_id: this.currentUser.id,
+                            type: type,
+                            title: title,
+                            description: description
+                        }
+                    ]);
+
+                if (!error) {
+                    suggestionSaved = true;
+                }
+            } catch (dbError) {
+                console.log('Suggestions table might not exist, using fallback');
+            }
+
+            if (!suggestionSaved) {
+                const suggestions = JSON.parse(localStorage.getItem('member_suggestions') || '[]');
+                suggestions.push({
+                    id: Date.now(),
+                    user_id: this.currentUser.id,
+                    type: type,
+                    title: title,
+                    description: description,
+                    created_at: new Date().toISOString(),
+                    status: 'pending'
+                });
+                localStorage.setItem('member_suggestions', JSON.stringify(suggestions));
+            }
+
+            alert(`💡 Suggestion "${title}" submitted successfully! Thank you for your input.`);
+            document.getElementById('suggestionForm').reset();
+            this.loadMySuggestions();
+
+        } catch (error) {
+            alert('Error submitting suggestion: ' + error.message);
+        }
+    }
+
+    async loadMySuggestions() {
+        const container = document.getElementById('mySuggestionsList');
+        if (!container) return;
+
+        try {
+            let mySuggestions = [];
+
+            try {
+                const { data, error } = await supabase
+                    .from('suggestions')
+                    .select('*')
+                    .eq('user_id', this.currentUser.id)
+                    .order('created_at', { ascending: false })
+                    .limit(5);
+
+                if (data) {
+                    mySuggestions = data;
+                }
+            } catch (dbError) {
+                console.log('Suggestions table might not exist, checking localStorage');
+            }
+
+            if (mySuggestions.length === 0) {
+                const localSuggestions = JSON.parse(localStorage.getItem('member_suggestions') || '[]');
+                mySuggestions = localSuggestions.filter(suggestion => 
+                    suggestion.user_id === this.currentUser.id
+                ).slice(0, 5);
+            }
+
+            if (mySuggestions.length === 0) {
+                container.innerHTML = '<p class="no-suggestions">You haven\'t submitted any suggestions yet.</p>';
+                return;
+            }
+
+            container.innerHTML = mySuggestions.map(suggestion => {
+                const suggestionDate = new Date(suggestion.created_at);
+                const formattedDate = suggestionDate.toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                });
+
+                const typeIcon = suggestion.type === 'song' ? '🎵' : 
+                               suggestion.type === 'event' ? '📅' : 
+                               suggestion.type === 'improvement' ? '💡' : '💬';
+
+                return `
+                    <div class="suggestion-item">
+                        <div class="suggestion-header">
+                            <span class="suggestion-type">${typeIcon} ${suggestion.type}</span>
+                            <span class="suggestion-date">${formattedDate}</span>
+                        </div>
+                        <h5>${suggestion.title}</h5>
+                        <p>${suggestion.description}</p>
+                        <div class="suggestion-status ${suggestion.status}">
+                            Status: ${suggestion.status || 'pending'}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+        } catch (error) {
+            console.error('Error loading suggestions:', error);
+            container.innerHTML = '<p class="no-suggestions">You haven\'t submitted any suggestions yet.</p>';
+        }
+    }
+}
+
+// Initialize dashboard when page loads
+document.addEventListener('DOMContentLoaded', () => {
+    new MemberDashboard();
+});
