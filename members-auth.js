@@ -1,4 +1,4 @@
-// members-auth.js - FIXED
+// members-auth.js - CLEAN VERSION (Members only)
 class LoginSecurity {
     constructor() {
         this.attempts = JSON.parse(localStorage.getItem('loginAttempts') || '{}');
@@ -27,7 +27,7 @@ class LoginSecurity {
 }
 
 function validatePassword(password) {
-    const minLength = 6; // Reduced for better UX
+    const minLength = 6;
     return password.length >= minLength;
 }
 
@@ -117,60 +117,64 @@ class MemberAuth {
         const voice = document.getElementById('regVoice')?.value;
         const password = document.getElementById('regPassword')?.value;
         const profilePictureFile = document.getElementById('regProfilePicture')?.files[0];
-    
+
         if (!name || !email || !phone || !voice || !password) {
             alert('Please fill in all required fields');
             return;
         }
-    
+
         if (!validatePassword(password)) {
             alert('Password must be at least 6 characters');
             return;
         }
-    
+
         if (!SecurityUtils.validateEmail(email)) {
             alert('Please enter a valid email address');
             return;
         }
-    
+
         const sanitizedName = SecurityUtils.sanitizeInput(name);
         const sanitizedEmail = SecurityUtils.sanitizeInput(email);
         const sanitizedPhone = SecurityUtils.sanitizeInput(phone);
-    
+
         try {
             const { data: existingUsers, error: checkError } = await supabase
                 .from('members')
                 .select('email')
                 .eq('email', sanitizedEmail);
-    
+
             if (existingUsers && existingUsers.length > 0) {
                 throw new Error('Email already registered!');
             }
-    
-            // Create auth user
+
             const { data: authData, error: authError } = await supabase.auth.signUp({
                 email: sanitizedEmail,
                 password: password,
             });
-    
+
             if (authError) throw authError;
-    
+
+            // Wait for user to be fully created
+            await new Promise(resolve => setTimeout(resolve, 2000));
+
             let profilePictureUrl = 'images/514-5147412_default-avatar-png.png';
-    
+
+            // Upload profile picture if provided
             if (profilePictureFile) {
                 try {
-                    profilePictureUrl = await this.uploadProfilePictureDuringRegistration(profilePictureFile, authData.user?.id || sanitizedEmail);
+                    profilePictureUrl = await this.uploadProfilePictureDuringRegistration(profilePictureFile, authData.user.id);
                 } catch (uploadError) {
                     console.error('Error uploading profile picture:', uploadError);
+                    profilePictureUrl = 'images/514-5147412_default-avatar-png.png';
                 }
             }
-    
-            // SIMPLE INSERT - no user_id foreign key issues
+
+            // Insert member (REGULAR MEMBER ONLY - no admin logic)
             const { error: dbError } = await supabase
                 .from('members')
                 .insert([
                     {
-                        user_id: authData.user?.id || sanitizedEmail, // Use email if no user_id
+                        user_id: authData.user.id,
                         email: sanitizedEmail,
                         name: sanitizedName,
                         phone: sanitizedPhone,
@@ -179,38 +183,25 @@ class MemberAuth {
                         created_at: new Date()
                     }
                 ]);
-    
-            if (dbError) {
-                console.error('Database error:', dbError);
-                throw new Error('Failed to create member: ' + dbError.message);
-            }
-    
-            // Auto-add super admin
-            if (sanitizedEmail === 'horatiousfrimpong@gmail.com') {
-                await supabase
-                    .from('leaders')
-                    .insert([
-                        {
-                            user_id: authData.user?.id || sanitizedEmail,
-                            email: sanitizedEmail,
-                            role: 'Super Admin',
-                            status: 'approved',
-                            added_by: 'system',
-                            is_active: true
-                        }
-                    ]);
-            }
-    
-            alert('Registration successful! Please login with your credentials.');
+
+            if (dbError) throw dbError;
+
+            alert('Registration successful! You can now login.');
             
-            // Show login section instead of auto-login
-            this.showSection('loginSection');
-            document.getElementById('registerForm').reset();
-    
+            const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
+                email: sanitizedEmail,
+                password: password
+            });
+
+            if (loginError) throw loginError;
+            
+            window.location.href = 'member-dashboard.html';
+
         } catch (error) {
             alert('Registration failed: ' + error.message);
         }
     }
+
     async logout() {
         try {
             await supabase.auth.signOut();
@@ -412,6 +403,44 @@ class MemberAuth {
         }
     }
 
+    async uploadProfilePictureDuringRegistration(file, userId) {
+        const validTypes = {
+            'image/jpeg': true,
+            'image/jpg': true, 
+            'image/png': true,
+            'image/gif': true
+        };
+        
+        const maxSize = 2 * 1024 * 1024;
+
+        if (!validTypes[file.type]) {
+            throw new Error('Please select a valid image file (JPEG, PNG, GIF only)');
+        }
+
+        if (file.size > maxSize) {
+            throw new Error('Image size must be less than 2MB');
+        }
+
+        const sanitizedFilename = SecurityUtils.sanitizeFilename(file.name);
+        
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${userId}-${Date.now()}.${fileExt}`;
+        
+        const { data: uploadData, error: uploadError } = await supabase.storage
+            .from('profile-pictures')
+            .upload(fileName, file);
+
+        if (uploadError) throw uploadError;
+
+        const { data: urlData } = await supabase.storage
+            .from('profile-pictures')
+            .getPublicUrl(fileName);
+
+        if (!urlData.publicUrl) throw new Error('Could not get image URL');
+
+        return urlData.publicUrl;
+    }
+
     async editProfile() {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
@@ -444,11 +473,4 @@ class MemberAuth {
 // Initialize when page loads
 document.addEventListener('DOMContentLoaded', () => {
     new MemberAuth();
-
 });
-
-
-
-
-
-
