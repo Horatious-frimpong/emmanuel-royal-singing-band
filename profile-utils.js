@@ -30,17 +30,31 @@ class ProfileUtils {
             return 'images/514-5147412_default-avatar-png.png';
         }
     }
+    static addCacheBuster(url) {
+        if (!url) return url;
+        
+        // Don't add cache buster to data URLs or already busted URLs
+        if (url.startsWith('data:') || url.includes('?v=')) {
+            return url;
+        }
+        
+        // Add timestamp as cache buster - CHANGES AUTOMATICALLY
+        const separator = url.includes('?') ? '&' : '?';
+        return `${url}${separator}_v=${Date.now()}`;
+    }
+
     
     static setProfilePicture(imgElement, url) {
-        // ✅ ROBUST: Better error logging
-        if (url && url.startsWith('http')) {
-            imgElement.src = url;
+        const bustedUrl = this.addCacheBuster(url);
+        
+        if (bustedUrl && bustedUrl.startsWith('http')) {
+            imgElement.src = bustedUrl;
             imgElement.onerror = function() {
-                console.error('Failed to load profile picture from URL:', url);
+                console.error('Failed to load profile picture from URL:', bustedUrl);
                 this.src = 'images/514-5147412_default-avatar-png.png';
             };
         } else {
-            imgElement.src = url || 'images/514-5147412_default-avatar-png.png';
+            imgElement.src = bustedUrl || 'images/514-5147412_default-avatar-png.png';
         }
     }
     
