@@ -2030,16 +2030,239 @@ input[type="file"]::file-selector-button:hover {
     }
 }
 
-.notification {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+/* Enhanced CSS for notifications and security features */
+.notification-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 10001;
+    max-width: 400px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
-/* Mobile responsive notifications */
+.notification {
+    background: var(--notification-bg, #8B0000);
+    color: white;
+    padding: 16px;
+    margin-bottom: 10px;
+    border-radius: 12px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    animation: slideInRight 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    cursor: pointer;
+    border-left: 4px solid var(--notification-border, #5a0000);
+    max-width: 380px;
+    word-wrap: break-word;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+.notification:hover {
+    transform: translateY(-2px);
+    transition: transform 0.2s ease;
+}
+
+.notification-info {
+    --notification-bg: #8B0000;
+    --notification-border: #5a0000;
+}
+
+.notification-success {
+    --notification-bg: #28a745;
+    --notification-border: #1e7e34;
+}
+
+.notification-warning {
+    --notification-bg: #ffc107;
+    --notification-border: #e0a800;
+    color: #212529;
+}
+
+.notification-error {
+    --notification-bg: #dc3545;
+    --notification-border: #c82333;
+}
+
+.notification-system {
+    --notification-bg: #6f42c1;
+    --notification-border: #5a36a3;
+}
+
+.notification-progress {
+    height: 3px;
+    background: rgba(255,255,255,0.3);
+    border-radius: 2px;
+    margin-top: 12px;
+    overflow: hidden;
+}
+
+.notification-progress-bar {
+    height: 100%;
+    background: white;
+    width: 100%;
+    transition: width linear;
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOutRight {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+}
+
+/* Security-specific styles */
+.security-warning {
+    border: 2px solid #ffc107 !important;
+    background: #fff3cd !important;
+    color: #856404 !important;
+}
+
+.security-alert {
+    border: 2px solid #dc3545 !important;
+    background: #f8d7da !important;
+    color: #721c24 !important;
+}
+
+.security-success {
+    border: 2px solid #28a745 !important;
+    background: #d4edda !important;
+    color: #155724 !important;
+}
+
+/* Loading states */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.7);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(5px);
+}
+
+.loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #8B0000;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Session warning modal */
+.session-warning {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    z-index: 10000;
+    border: 3px solid #8B0000;
+    text-align: center;
+    max-width: 400px;
+    width: 90%;
+}
+
+.session-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    z-index: 9999;
+}
+
+/* Form validation styles */
+.validation-message {
+    color: #dc3545;
+    font-size: 12px;
+    margin-top: 4px;
+}
+
+.input-valid {
+    border-color: #28a745 !important;
+}
+
+.input-invalid {
+    border-color: #dc3545 !important;
+}
+
+/* Print security */
+@media print {
+    .no-print,
+    .sensitive-data {
+        display: none !important;
+    }
+}
+
+/* Mobile responsiveness */
 @media (max-width: 768px) {
-    #app-notifications {
+    .notification-container {
         top: 10px;
         right: 10px;
         left: 10px;
         max-width: none;
+    }
+    
+    .notification {
+        max-width: none;
+    }
+    
+    .session-warning {
+        margin: 1rem;
+        width: calc(100% - 2rem);
+    }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .notification {
+        border: 2px solid currentColor;
+    }
+    
+    .loading-spinner {
+        border-top-color: currentColor;
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    .notification {
+        animation: none;
+    }
+    
+    .loading-spinner {
+        animation-duration: 2s;
+    }
+    
+    .notification-progress-bar {
+        transition: none;
     }
 }
