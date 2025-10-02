@@ -318,9 +318,18 @@ class MemberDashboard {
                 localStorage.setItem('member_suggestions', JSON.stringify(suggestions));
             }
 
-            alert(`🎵 Song suggestion "${songTitle}" submitted successfully! Our music team will review it.`);
-            this.closeSongSuggestionModal();
-            this.loadMySuggestions();
+              if (suggestionSaved) {
+                // ✅ ADD NOTIFICATION HERE (replace the alert):
+                AppNotifications.showNotification(
+                    '🎵 Song Suggested', 
+                    `"${songTitle}" submitted to our music team for review.`,
+                    'success',
+                    4000
+                );
+                
+                this.closeSongSuggestionModal();
+                this.loadMySuggestions();
+            }
 
         } catch (error) {
             alert('Error submitting song suggestion: ' + error.message);
@@ -372,11 +381,18 @@ class MemberDashboard {
                 });
                 localStorage.setItem('member_suggestions', JSON.stringify(suggestions));
             }
-
-            alert(`💡 Suggestion "${title}" submitted successfully! Thank you for your input.`);
-            document.getElementById('suggestionForm').reset();
-            this.loadMySuggestions();
-
+            if (suggestionSaved) {
+                // ✅ ADD NOTIFICATION HERE (replace the alert):
+                AppNotifications.showNotification(
+                    '💡 Suggestion Submitted', 
+                    `"${title}" submitted successfully! Thank you for your input.`,
+                    'success',
+                    4000
+                );
+                
+                document.getElementById('suggestionForm').reset();
+                this.loadMySuggestions();
+            }
         } catch (error) {
             alert('Error submitting suggestion: ' + error.message);
         }
@@ -460,7 +476,15 @@ class MemberDashboard {
             if (member && member.name) {
                 this.memberData = member;
                 document.getElementById('memberName').textContent = SecurityUtils.preventXSS(member.name);
-                
+                if (!sessionStorage.getItem('welcomeShown')) {
+                    AppNotifications.showNotification(
+                        '👋 Welcome Back!',
+                        `Hello ${member.name}! Ready to make some beautiful music?`,
+                        'info',
+                        4000
+                    );
+                    sessionStorage.setItem('welcomeShown', 'true');
+                }
                 // FIXED: Load profile picture in dashboard
                 const profileImg = document.getElementById('dashboardProfileImg');
                 if (profileImg && member.profile_picture) {
@@ -484,5 +508,6 @@ class MemberDashboard {
 document.addEventListener('DOMContentLoaded', () => {
     new MemberDashboard();
 });
+
 
 
