@@ -155,7 +155,7 @@ class AdminDashboard {
 
             if (error) throw error;
 
-            alert('Announcement posted successfully!');
+            AppNotifications.showNotification('Announcement Posted', 'Your announcement has been published.', 'success');
             document.getElementById('announcementForm').reset();
             this.loadAnnouncements();
         } catch (error) {
@@ -244,7 +244,7 @@ class AdminDashboard {
 
             if (error) throw error;
 
-            alert('Event added successfully!');
+            AppNotifications.newEventAdded(title);
             document.getElementById('eventForm').reset();
             this.loadEvents();
         } catch (error) {
@@ -328,7 +328,7 @@ class AdminDashboard {
 
             if (error) throw error;
 
-            alert('Song added successfully!');
+            AppNotifications.songAdded(title);
             document.getElementById('addSongForm').reset();
             this.loadMusicRepertoire();
         } catch (error) {
@@ -628,5 +628,6 @@ class AdminDashboard {
 
 // Initialize admin dashboard
 const adminDashboard = new AdminDashboard();
+
 
 
