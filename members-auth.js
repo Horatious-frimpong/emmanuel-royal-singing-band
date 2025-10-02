@@ -90,6 +90,12 @@ class MemberAuth {
         const email = document.getElementById('loginEmail')?.value;
         const password = document.getElementById('loginPassword')?.value;
 
+        if (success) {
+            // ADD THIS LINE:
+            AppNotifications.loginSuccess(user.name);
+            window.location.href = 'member-dashboard.html';
+        }
+        
         if (!email || !password) {
             alert('Please fill in all fields');
             return;
@@ -599,6 +605,7 @@ class MemberAuth {
 document.addEventListener('DOMContentLoaded', () => {
     new MemberAuth();
 });
+
 
 
 
